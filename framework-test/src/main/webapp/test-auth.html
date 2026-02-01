@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Framework - Authentification et Rôles</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .card h2 { margin-top: 0; color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+        .card h3 { color: #555; margin-top: 20px; }
+        .btn { display: inline-block; padding: 12px 24px; margin: 5px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: all 0.3s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5a6fd6; transform: translateY(-2px); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; transform: translateY(-2px); }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; transform: translateY(-2px); }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; transform: translateY(-2px); }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #138496; transform: translateY(-2px); }
+        .api-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .endpoint { font-family: monospace; background: #e9ecef; padding: 8px 12px; border-radius: 4px; display: inline-block; margin: 5px 0; }
+        .role-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        .role-public { background: #28a745; color: white; }
+        .role-user { background: #007bff; color: white; }
+        .role-admin { background: #dc3545; color: white; }
+        .role-manager { background: #fd7e14; color: white; }
+        .config-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .config-box code { background: #ffeeba; padding: 2px 6px; border-radius: 3px; }
+        #result { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+        #result.success { display: block; background: #d4edda; border: 1px solid #c3e6cb; }
+        #result.error { display: block; background: #f8d7da; border: 1px solid #f5c6cb; }
+        pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test Framework - Authentification et Rôles</h1>
+
+        <div class="card">
+            <h2>📝 Configuration (config.xml)</h2>
+            <div class="config-box">
+                <p>Les noms des variables de session sont configurables dans <code>config.xml</code>:</p>
+                <pre>&lt;configuration&gt;
+    &lt;package&gt;com.nam.java&lt;/package&gt;
+    &lt;sessionVariable&gt;currentUser&lt;/sessionVariable&gt;
+    &lt;roleVariable&gt;userRole&lt;/roleVariable&gt;
+&lt;/configuration&gt;</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔑 Authentification</h2>
+            <div class="grid">
+                <div>
+                    <h3>Pages de connexion</h3>
+                    <a href="auth/login" class="btn btn-primary">📋 Formulaire de connexion</a>
+                    <a href="auth/logout" class="btn btn-danger">🚪 Déconnexion</a>
+                </div>
+                <div>
+                    <h3>API Session (JSON)</h3>
+                    <a href="auth/session-info" class="btn btn-info">📊 Info Session</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔓 Pages Publiques</h2>
+            <p>Ces pages sont accessibles à tous sans authentification:</p>
+            <a href="auth/public" class="btn btn-success">Page Publique <span class="role-badge role-public">PUBLIC</span></a>
+        </div>
+
+        <div class="card">
+            <h2>🔒 Pages Protégées par Rôle</h2>
+            <p>Ces pages nécessitent une authentification et un rôle spécifique:</p>
+            
+            <div class="api-section">
+                <h3>Rôle USER requis</h3>
+                <a href="auth/user-only" class="btn btn-primary">Page USER <span class="role-badge role-user">USER</span></a>
+            </div>
+            
+            <div class="api-section">
+                <h3>Rôle MANAGER requis</h3>
+                <a href="auth/manager-only" class="btn btn-warning">Page MANAGER <span class="role-badge role-manager">MANAGER</span></a>
+            </div>
+            
+            <div class="api-section">
+                <h3>Rôle ADMIN requis</h3>
+                <a href="auth/admin-only" class="btn btn-danger">Page ADMIN <span class="role-badge role-admin">ADMIN</span></a>
+                <a href="auth/admin-api" class="btn btn-info">API ADMIN (JSON) <span class="role-badge role-admin">ADMIN</span></a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Utilisation dans le code</h2>
+            <h3>1. Protéger une méthode avec un rôle:</h3>
+            <pre>@MyAnnotation(value = "/admin-only", method = HttpMethod.GET, role = "ADMIN")
+public ModelView adminPage() {
+    // Accessible uniquement aux ADMIN
+}</pre>
+            
+            <h3>2. Connecter un utilisateur:</h3>
+            <pre>// Stocker l'utilisateur et son rôle
+RoleChecker.setCurrentUser(userObject);
+RoleChecker.setUserRoleInSession("ADMIN");</pre>
+            
+            <h3>3. Vérifier l'authentification:</h3>
+            <pre>// Vérifier si connecté
+boolean isAuth = RoleChecker.isAuthenticated();
+
+// Récupérer l'utilisateur
+Object user = RoleChecker.getCurrentUser();
+
+// Récupérer le rôle
+String role = RoleChecker.getUserRoleFromSession();</pre>
+            
+            <h3>4. Déconnecter:</h3>
+            <pre>RoleChecker.logout();</pre>
+        </div>
+
+        <div class="card">
+            <h2>🧪 Test API (JavaScript)</h2>
+            <div class="grid">
+                <div>
+                    <button onclick="testEndpoint('auth/session-info')" class="btn btn-info">Test Session Info</button>
+                    <button onclick="testEndpoint('auth/admin-api')" class="btn btn-danger">Test Admin API</button>
+                </div>
+            </div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testEndpoint(url) {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                resultDiv.className = response.ok ? 'success' : 'error';
+                resultDiv.innerHTML = '<strong>Status:</strong> ' + response.status + 
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (e) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = '<strong>Erreur:</strong> ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>

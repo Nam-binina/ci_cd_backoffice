@@ -1,0 +1,101 @@
+{
+    "[php]": {
+        "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    },
+    "json.schemas": [
+
+    ],
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "/home/nam/Bureau/package/jarfile/jakarta.servlet-api-5.0.0.jar",
+        "/home/nam/.m2/repository/**",
+        "commons-math3-3.6.1-bin/commons-math3-3.6.1/commons-math3-3.6.1.jar"
+    ],
+    "workbench.settings.applyToAllProfiles": [
+        
+        
+    ],
+    "editor.foldingImportsByDefault": true,
+    "explorer.confirmDelete": false,
+    "editor.quickSuggestions": {
+        "comments": "on",
+        "strings": "on"
+    },
+
+    "editor.suggest.snippetsPreventQuickSuggestions": true,
+    "editor.defaultFormatter": "Jota0222.multi-formatter",
+    "editor.codeActionsOnSave": {
+
+    },
+    "workbench.colorCustomizations": {},
+    "[python]": {
+        "editor.defaultFormatter": "Jota0222.multi-formatter"
+    },
+    "workbench.editor.defaultBinaryEditor": "default",
+    "multiFormatter.formatterList": [
+
+    ],
+    "[java]": {
+        "editor.defaultFormatter": "redhat.java"
+    },
+    "editor.minimap.enabled": false,
+    "[xml]": {
+        "editor.defaultFormatter": "redhat.vscode-xml"
+    },
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "html.format.contentUnformatted": "",
+    "[django-html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[dotenv]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
+    "maven.executable.preferMavenWrapper": false,
+    "dotnetAcquisitionExtension.existingDotnetPath": [
+
+    ],
+    "[ignore]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
+    "[properties]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
+    "[shellscript]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    },
+    "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
+    "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.dockercompose",
+    "gitlens.ai.model": "vscode",
+    "gitlens.ai.vscode.model": "copilot:gpt-4.1",
+    "java.completion.favoriteStaticMembers": [
+    
+
+        "org.junit.Assert.*",
+        "org.junit.Assume.*",
+        "org.junit.jupiter.api.Assertions.*",
+        "org.junit.jupiter.api.Assumptions.*",
+        "org.junit.jupiter.api.DynamicContainer.*",
+        "org.junit.jupiter.api.DynamicTest.*",
+        "org.mockito.Mockito.*",
+        "org.mockito.ArgumentMatchers.*",
+        "org.mockito.Answers.*"
+    ],
+    "rsp-ui.enableStartServerOnActivation": [
+        {
+            "id": "redhat.vscode-community-server-connector",
+            "name": "Community Server Connector",
+            "startOnActivation": true
+        }
+    ],
+    "extensions.autoUpdate": false,
+    "roslynator.autoUpdateOmnisharpJson": false,
+    "explorer.confirmDragAndDrop": false
+}

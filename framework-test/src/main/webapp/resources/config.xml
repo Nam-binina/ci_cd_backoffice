@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <package>com.nam.java</package>
+    <!-- Nom de la variable session qui contient l'objet utilisateur connecté -->
+    <sessionVariable>currentUser</sessionVariable>
+    <!-- Nom de la variable session qui contient le rôle de l'utilisateur -->
+    <roleVariable>userRole</roleVariable>
+</configuration>
