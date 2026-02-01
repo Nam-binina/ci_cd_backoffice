@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd /home/nam/Documents/GitHub/ci_cd_entrainement/framework-test && ./deploy.sh",
+  "startCommand": "java -jar framework-test.war"
+}

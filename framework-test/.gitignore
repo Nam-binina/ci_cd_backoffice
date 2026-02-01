@@ -1,0 +1,8 @@
+framework.jar
+build
+.idea
+*.class
+*.war
+*.jar
+*.log
+*.tmp
