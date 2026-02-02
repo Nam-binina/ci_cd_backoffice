@@ -1,32 +1,50 @@
 #!/bin/bash
+name="ci_cd_backoffice"
 
-echo "=== Déploiement Framework-Test (WAR) ==="
+echo "🚀 Build Railway (JAR)"
 
-# Aller dans le dossier framework-test
-cd /home/nam/Documents/GitHub/ci_cd_entrainement/framework-test
+# Nettoyage
+chmod -R 777 *
+rm -rf build "$name".jar
 
-# Vérifier si le WAR existe
-if [ -f "framework-test.war" ]; then
-    echo "✅ WAR trouvé: framework-test.war"
+# Création des répertoires
+mkdir -p build/classes
+mkdir -p build/lib
+
+# Compilation des sources Java
+echo "📦 Compilation des sources Java..."
+javac --release 21 -parameters -cp "lib/framework.jar" -d build/classes/ src/main/java/com/nam/java/*.java
+
+if [ $? -ne 0 ]; then
+    echo "❌ Erreur de compilation"
+    exit 1
+fi
+
+# Copie des ressources webapp
+if [ -d src/main/webapp ]; then
+    cp -r src/main/webapp/* build/
+    echo "✅ Ressources webapp copiées"
 else
-    echo "Building WAR..."
-    if [ -f "deploy.sh" ]; then
-        ./deploy.sh
-    else
-        echo "❌ Pas de script de build trouvé et WAR manquant"
-        exit 1
-    fi
+    echo "⚠️  Aucun répertoire src/main/webapp trouvé"
 fi
 
-# Initialiser Railway si pas déjà fait
-if [ ! -f ".railway" ]; then
-    echo "Initialisation Railway..."
-    railway init
+# Copie des librairies
+if [ -d lib ]; then
+    cp -r lib/* build/lib/
+    echo "✅ Librairies copiées"
+else
+    echo "⚠️  Aucun répertoire lib trouvé"
 fi
 
-# Déployer sur Railway
-echo "Déploiement sur Railway..."
-railway up --detach
+# Création du JAR
+echo "📦 Création du JAR..."
+jar -cvf "$name".jar -C build .
 
-echo "✅ Déploiement terminé!"
-railway status
+if [ -f "$name".jar ]; then
+    echo "🎉 JAR créé avec succès : $name.jar"
+else
+    echo "❌ Erreur lors de la création du JAR"
+    exit 1
+fi
+
+chmod -R 777 *

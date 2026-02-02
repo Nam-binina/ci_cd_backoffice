@@ -1,5 +1,5 @@
 #!/bin/bash
-name="framework-test"
+name="ci_cd_backoffice"
 
 chmod -R 777 *
 rm -rf build "$name".war
