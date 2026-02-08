@@ -1,5 +1,5 @@
 #!/bin/bash
-name="framework-test"
+name="backoffice"
 
 chmod -R 777 *
 rm -rf build "$name".war
@@ -7,7 +7,12 @@ rm -rf build "$name".war
 mkdir -p build/WEB-INF/classes
 mkdir -p build/WEB-INF/lib
 
-javac --release 21 -parameters -cp "lib/framework.jar" -d build/WEB-INF/classes/ src/main/java/com/nam/java/*.java
+LIB_CP=$(ls lib/*.jar 2>/dev/null | tr '\n' ':' | sed 's/:$//')
+if [ -z "$LIB_CP" ]; then
+    LIB_CP="lib/framework.jar"
+fi
+
+find src/main/java -name "*.java" -print0 | xargs -0 javac --release 21 -parameters -cp "$LIB_CP" -d build/WEB-INF/classes/
 
 if [ -d src/main/webapp ]; then
     cp -r src/main/webapp/* build/
@@ -23,7 +28,9 @@ fi
 
 jar -cvf "$name".war -C build .
 
-TOMCAT_PATH="/home/nam/Desktop/server/apache-tomcat-9.0.89/webapps/"
+# /home/safidy/Documents/instaled/apache-tomcat-9.0.89
+
+TOMCAT_PATH="/home/safidy/Documents/instaled/apache-tomcat-9.0.89/webapps/"
 
 if [ -d "$TOMCAT_PATH" ]; then
     rm -f "$TOMCAT_PATH/$name.war"
