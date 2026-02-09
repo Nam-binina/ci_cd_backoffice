@@ -30,7 +30,8 @@ public class DemoClass {
 
     @MyAnnotation(value = "/GoodbyeMethod",method = HttpMethod.POST)
     public ModelView list() {
-    System.out.println("Goodbye !");
+
+        System.out.println("Goodbye !");
     ModelView M = new ModelView();
     Etudiant E = new Etudiant("Nam", "Nguyen");
     M.addItem("etudiant", E);

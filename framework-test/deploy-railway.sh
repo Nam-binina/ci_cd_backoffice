@@ -3,7 +3,8 @@
 echo "=== Déploiement Framework-Test (WAR) ==="
 
 # Aller dans le dossier framework-test
-cd /home/nam/Documents/GitHub/ci_cd_entrainement/framework-test
+#/home/safidy/Documents/L3/s5/mrnaina/ci_cd_backoffice
+cd /home/safidy/Documents/L3/s5/mrnaina/ci_cd_backoffice/framework-test
 
 # Vérifier si le WAR existe
 if [ -f "framework-test.war" ]; then
