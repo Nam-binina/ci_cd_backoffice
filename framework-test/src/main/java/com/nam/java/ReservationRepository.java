@@ -50,7 +50,7 @@ public class ReservationRepository {
 
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors de l'insertion de la réservation", e);
+            throw new RuntimeException("Erreur lors de l'insertion de la réservation : " + e.getMessage(), e);
         }
     }
 }
