@@ -12,8 +12,8 @@ import java.sql.SQLException;
 public final class Connexion {
 
     private static final String URL = "jdbc:mysql://localhost:3306/ci_cd?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "ci_user";
-    private static final String PASSWORD = "mot_de_passe_fort";
+    private static final String USER = "root";
+    private static final String PASSWORD = "";
 
     private Connexion() {
     }
