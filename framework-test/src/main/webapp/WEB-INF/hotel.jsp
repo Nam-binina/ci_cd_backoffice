@@ -1,4 +1,4 @@
-<%@ page import="com.nam.java.Hotel" %>
+<%@ page import="com.nam.java.model.Hotel" %>
 <%@ page contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html>

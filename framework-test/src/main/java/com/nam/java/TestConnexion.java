@@ -1,4 +1,7 @@
 package com.nam.java;
+
+import com.nam.java.repository.Connexion;
+
 public class TestConnexion {
     public static void main(String[] args) {
         boolean ok = Connexion.testConnection();

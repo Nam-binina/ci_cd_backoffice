@@ -1,4 +1,4 @@
-package com.nam.java;
+package com.nam.java.model;
 
 public class Hotel {
     private int idHotel;

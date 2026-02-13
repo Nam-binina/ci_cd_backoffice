@@ -1,4 +1,4 @@
-package com.nam.java;
+package com.nam.java.model;
 
 /**
  * Classe simple représentant un utilisateur pour les tests

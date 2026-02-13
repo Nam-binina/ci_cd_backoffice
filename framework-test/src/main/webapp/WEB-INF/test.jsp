@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ page
-import="com.nam.java.Etudiant" %>
+import="com.nam.java.model.Etudiant" %>
 <html>
   <head>
     <title>Étudiant</title>
