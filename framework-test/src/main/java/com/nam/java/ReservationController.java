@@ -1,6 +1,7 @@
 package com.nam.java;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
@@ -29,6 +30,12 @@ public class ReservationController {
     ) {
         ModelView mv = new ModelView();
 
+        if (idHotel <= 0) {
+            mv.addItem("error", "Sélectionne un hôtel valide");
+            mv.setJspName("reservationForm");
+            return mv;
+        }
+
         if (idClient == null || idClient.trim().isEmpty()) {
             mv.addItem("error", "Identifiant client requis");
             mv.setJspName("reservationForm");
@@ -36,7 +43,8 @@ public class ReservationController {
         }
 
         try {
-            LocalDateTime date = LocalDateTime.parse(dateArriver);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+            LocalDateTime date = LocalDateTime.parse(dateArriver, formatter);
             Reservation reservation = new Reservation(0, date, nbrPassager, idClient, idHotel);
             new ReservationRepository().insert(reservation);
 
@@ -45,7 +53,7 @@ public class ReservationController {
             mv.setJspName("reservationList");
             return mv;
         } catch (DateTimeParseException e) {
-            mv.addItem("error", "Format de date invalide");
+            mv.addItem("error", "Format de date invalide (ex: 2026-02-09T14:30)");
         } catch (Exception e) {
             mv.addItem("error", e.getMessage());
         }
@@ -72,8 +80,24 @@ public class ReservationController {
     public ModelView api() {
         ModelView mv = new ModelView();
         List<Reservation> reservations = new ReservationRepository().findAll();
-        mv.addItem("reservations", reservations);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        List<java.util.Map<String, Object>> payload = new java.util.ArrayList<>();
+        for (Reservation reservation : reservations) {
+            java.util.Map<String, Object> item = new java.util.HashMap<>();
+            item.put("Id_reservation", reservation.getIdReservation());
+            item.put("date_arriver", reservation.getDateArriver() != null
+                    ? formatter.format(reservation.getDateArriver())
+                    : null);
+            item.put("nbr_passager", reservation.getNbrPassager());
+            item.put("id_client", reservation.getIdClient());
+            item.put("Id_hotel", reservation.getIdHotel());
+            payload.add(item);
+        }
+
+        mv.addItem("reservations", payload);
         mv.addItem("count", reservations.size());
+        mv.addItem("status", 200);
         return mv;
     }
 }
