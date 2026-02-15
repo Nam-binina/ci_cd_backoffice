@@ -1,4 +1,5 @@
-package com.nam.java;
+package com.nam.java.model;
+
 public class Etudiant {
     private String nom;
     private String prenom;

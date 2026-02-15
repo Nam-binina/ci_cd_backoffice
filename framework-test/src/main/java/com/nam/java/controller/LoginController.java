@@ -1,12 +1,20 @@
-package com.nam.java;
-/*
-package com.nam.java;
+package com.nam.java.controller;
 
-import java.util.Map;
+import com.nam.java.Authorized;
+import com.nam.java.FrameworkConfig;
+import com.nam.java.HttpMethod;
+import com.nam.java.JsonAnnotation;
+import com.nam.java.ModelView;
+import com.nam.java.MyAnnotation;
+import com.nam.java.MyParam;
+import com.nam.java.RoleChecker;
+import com.nam.java.model.User;
+import com.nam.java.repository.UserDatabase;
 
 /**
  * Contrôleur pour gérer l'authentification et les tests de rôles
  */
+@MyAnnotation(value = "/auth", method = HttpMethod.CONTROLLER)
 public class LoginController {
 
     /**
@@ -26,26 +34,26 @@ public class LoginController {
     @MyAnnotation(value = "/login", method = HttpMethod.POST)
     public ModelView doLogin(@MyParam("username") String username, @MyParam("password") String password) {
         ModelView mv = new ModelView();
-        
+
         if (username == null || username.isEmpty()) {
             mv.addItem("error", "Nom d'utilisateur requis");
             mv.setJspName("loginForm");
             return mv;
         }
-        
+
         // Authentification avec la base de données
         UserDatabase db = UserDatabase.getInstance();
         UserDatabase.UserData userData = db.authenticate(username, password);
-        
+
         if (userData != null) {
             // Authentification réussie
             User user = userData.getUser();
             String role = userData.getRole();
-            
+
             // Stocker l'utilisateur et son rôle en session
             RoleChecker.setCurrentUser(user);
             RoleChecker.setUserRoleInSession(role);
-            
+
             mv.addItem("message", "Connexion réussie! Bienvenue " + user.getUsername());
             mv.addItem("user", user);
             mv.addItem("role", role);
@@ -56,7 +64,7 @@ public class LoginController {
             mv.addItem("username", username);
             mv.setJspName("loginForm");
         }
-        
+
         return mv;
     }
 
@@ -67,7 +75,7 @@ public class LoginController {
     public ModelView logout() {
         // Utiliser RoleChecker pour déconnecter
         RoleChecker.logout();
-        
+
         ModelView mv = new ModelView();
         mv.addItem("message", "Vous avez été déconnecté");
         mv.setJspName("loginForm");
@@ -81,22 +89,22 @@ public class LoginController {
     @JsonAnnotation
     public ModelView getSessionInfo() {
         ModelView mv = new ModelView();
-        
+
         boolean isAuthenticated = RoleChecker.isAuthenticated();
         mv.addItem("authenticated", isAuthenticated);
-        
+
         if (isAuthenticated) {
             Object user = RoleChecker.getCurrentUser();
             String role = RoleChecker.getUserRoleFromSession();
             mv.addItem("user", user);
             mv.addItem("role", role);
         }
-        
+
         // Afficher aussi les noms de variables configurés
         FrameworkConfig config = FrameworkConfig.getInstance();
         mv.addItem("sessionVariable", config.getSessionVariable());
         mv.addItem("roleVariable", config.getRoleVariable());
-        
+
         return mv;
     }
 
@@ -164,7 +172,7 @@ public class LoginController {
         mv.addItem("user", RoleChecker.getCurrentUser());
         return mv;
     }
-    
+
     /**
      * Page protégée par @Authorized - nécessite uniquement d'être connecté
      * Aucun rôle spécifique requis
@@ -181,7 +189,7 @@ public class LoginController {
         mv.setJspName("protectedPage");
         return mv;
     }
-    
+
     /**
      * API protégée par @Authorized avec message personnalisé
      */
@@ -197,4 +205,3 @@ public class LoginController {
         return mv;
     }
 }
-*/

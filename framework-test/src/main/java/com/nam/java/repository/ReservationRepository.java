@@ -1,5 +1,6 @@
-package com.nam.java;
+package com.nam.java.repository;
 
+import com.nam.java.model.Reservation;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

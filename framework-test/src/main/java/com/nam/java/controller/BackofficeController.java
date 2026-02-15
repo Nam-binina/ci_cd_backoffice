@@ -1,10 +1,10 @@
-package com.nam.java;
-/*
-package com.nam.java;
+package com.nam.java.controller;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.nam.java.HttpMethod;
+import com.nam.java.ModelView;
+import com.nam.java.MyAnnotation;
 
+@MyAnnotation(value = "/backoffice", method = HttpMethod.CONTROLLER)
 public class BackofficeController {
 
     @MyAnnotation(value = "", method = HttpMethod.GET)
@@ -14,4 +14,3 @@ public class BackofficeController {
         return view;
     }
 }
-*/

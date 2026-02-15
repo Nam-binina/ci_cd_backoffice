@@ -14,8 +14,6 @@ CREATE TABLE reservation(
    FOREIGN KEY(Id_hotel) REFERENCES hotel(Id_hotel)
 );
 
--- Si la table existe déjà avec id_client VARCHAR(4), appliquer ceci :
--- ALTER TABLE reservation MODIFY id_client VARCHAR(20) NOT NULL;
 
 -- Données exemples pour la table hotel
 INSERT INTO hotel (nom) VALUES
@@ -23,6 +21,7 @@ INSERT INTO hotel (nom) VALUES
 ('Novotel'),
 ('Ibis'),
 ('Lokanga');
+
 
 -- Données exemples pour la table reservation
 INSERT INTO reservation (date_arriver, nbr_passager, id_client, Id_hotel) VALUES

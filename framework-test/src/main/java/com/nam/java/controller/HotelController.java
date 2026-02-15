@@ -1,9 +1,13 @@
-package com.nam.java;
-/*
-package com.nam.java;
+package com.nam.java.controller;
 
+import com.nam.java.HttpMethod;
+import com.nam.java.ModelView;
+import com.nam.java.MyAnnotation;
+import com.nam.java.model.Hotel;
+import com.nam.java.repository.HotelRepository;
 import java.util.List;
 
+@MyAnnotation(value = "/hotel", method = HttpMethod.CONTROLLER)
 public class HotelController {
 
     @MyAnnotation(value = "/show", method = HttpMethod.GET)
@@ -21,17 +25,15 @@ public class HotelController {
             mv.setJspName("hotel");
             return mv;
         }
-        Hotel hotel = (hotels == null || hotels.isEmpty()) ? null : hotels.get(0);
         mv.addItem("hotels", hotels);
         mv.setJspName("hotelList");
         return mv;
     }
+
     @MyAnnotation(value = "/form", method = HttpMethod.GET)
     public ModelView form() {
-        System.out.println("Goodbye !");
-        ModelView M = new ModelView();
-        M.setJspName("post");
-        return M;
+        ModelView view = new ModelView();
+        view.setJspName("post");
+        return view;
     }
 }
-*/
