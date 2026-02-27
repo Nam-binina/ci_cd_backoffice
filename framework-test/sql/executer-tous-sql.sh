@@ -18,6 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 shopt -s nullglob
 SQL_FILES=("$SCRIPT_DIR"/*.sql)
 shopt -u nullglob
+DONEE_FILE="$SCRIPT_DIR/donee.sql"
 
 if [[ ${#SQL_FILES[@]} -eq 0 ]]; then
   echo "Aucun fichier .sql trouvé dans $SCRIPT_DIR"
@@ -25,8 +26,16 @@ if [[ ${#SQL_FILES[@]} -eq 0 ]]; then
 fi
 
 for sql_file in "${SQL_FILES[@]}"; do
+  if [[ "$sql_file" == "$DONEE_FILE" ]]; then
+    continue
+  fi
   echo "▶ Exécution: $(basename "$sql_file")"
   mysql "${MYSQL_ARGS[@]}" < "$sql_file"
 done
+
+if [[ -f "$DONEE_FILE" ]]; then
+  echo "▶ Exécution: $(basename "$DONEE_FILE") (dernier)"
+  mysql "${MYSQL_ARGS[@]}" < "$DONEE_FILE"
+fi
 
 echo "✅ Tous les scripts .sql ont été exécutés."
