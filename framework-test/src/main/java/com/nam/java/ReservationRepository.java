@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.List;
 public class ReservationRepository {
 
     public List<Reservation> findAll() {
-        String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel FROM reservation ORDER BY Id_reservation DESC";
+        String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel, IFNULL(id_aeroport, 0) AS id_aeroport, IFNULL(TA, 0) AS TA FROM reservation ORDER BY Id_reservation DESC";
         List<Reservation> reservations = new ArrayList<>();
 
         try (Connection conn = Connexion.getConnection();
@@ -21,12 +20,13 @@ public class ReservationRepository {
 
             while (rs.next()) {
                 int id = rs.getInt("Id_reservation");
-                Timestamp ts = rs.getTimestamp("date_arriver");
-                LocalDateTime dateArriver = (ts != null) ? ts.toLocalDateTime() : null;
+                LocalDateTime dateArriver = rs.getObject("date_arriver", LocalDateTime.class);
                 int nbrPassager = rs.getInt("nbr_passager");
                 String idClient = rs.getString("id_client");
                 int idHotel = rs.getInt("Id_hotel");
-                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel));
+                int idAeroport = rs.getInt("id_aeroport");
+                int ta = rs.getInt("TA");
+                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, ta));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des réservations", e);
@@ -41,9 +41,7 @@ public class ReservationRepository {
         try (Connection conn = Connexion.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setTimestamp(1, reservation.getDateArriver() != null
-                    ? Timestamp.valueOf(reservation.getDateArriver())
-                    : null);
+            ps.setObject(1, reservation.getDateArriver());
             ps.setInt(2, reservation.getNbrPassager());
             ps.setString(3, reservation.getIdClient());
             ps.setInt(4, reservation.getIdHotel());
@@ -52,5 +50,99 @@ public class ReservationRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors de l'insertion de la réservation : " + e.getMessage(), e);
         }
+    }
+
+    public List<Reservation> findNotAssigned() {
+        String sql = "SELECT r.Id_reservation, r.date_arriver, r.nbr_passager, r.id_client, r.Id_hotel, IFNULL(r.id_aeroport, 0) AS id_aeroport, IFNULL(r.TA, 0) AS TA " +
+                "FROM reservation r " +
+                "LEFT JOIN assignation a ON a.id_reservation = r.Id_reservation " +
+                "WHERE a.id IS NULL " +
+                "ORDER BY r.Id_reservation DESC";
+
+        List<Reservation> reservations = new ArrayList<>();
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                int id = rs.getInt("Id_reservation");
+                LocalDateTime dateArriver = rs.getObject("date_arriver", LocalDateTime.class);
+                int nbrPassager = rs.getInt("nbr_passager");
+                String idClient = rs.getString("id_client");
+                int idHotel = rs.getInt("Id_hotel");
+                int idAeroport = rs.getInt("id_aeroport");
+                int ta = rs.getInt("TA");
+                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, ta));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du chargement des réservations non assignées", e);
+        }
+
+        return reservations;
+    }
+
+    public Reservation findById(int idReservation) {
+        String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel, IFNULL(id_aeroport, 0) AS id_aeroport, IFNULL(TA, 0) AS TA " +
+                "FROM reservation WHERE Id_reservation = ?";
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idReservation);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+
+                LocalDateTime dateArriver = rs.getObject("date_arriver", LocalDateTime.class);
+                return new Reservation(
+                        rs.getInt("Id_reservation"),
+                        dateArriver,
+                        rs.getInt("nbr_passager"),
+                        rs.getString("id_client"),
+                        rs.getInt("Id_hotel"),
+                    rs.getInt("id_aeroport"),
+                        rs.getInt("TA")
+                );
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du chargement de la réservation", e);
+        }
+    }
+
+    public List<Reservation> findOverlappingForSelectedDeparture(int selectedReservationId) {
+        String sql = "SELECT r2.Id_reservation, r2.date_arriver, r2.nbr_passager, r2.id_client, r2.Id_hotel, IFNULL(r2.id_aeroport, 0) AS id_aeroport, IFNULL(r2.TA, 0) AS TA " +
+                "FROM reservation r1 " +
+                "JOIN reservation r2 ON r1.date_arriver BETWEEN r2.date_arriver AND DATE_ADD(r2.date_arriver, INTERVAL IFNULL(r2.TA, 0) MINUTE) " +
+            "AND IFNULL(r1.id_aeroport, -1) = IFNULL(r2.id_aeroport, -1) " +
+                "WHERE r1.Id_reservation = ? " +
+                "ORDER BY r2.date_arriver ASC, r2.Id_reservation ASC";
+
+        List<Reservation> overlaps = new ArrayList<>();
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, selectedReservationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LocalDateTime dateArriver = rs.getObject("date_arriver", LocalDateTime.class);
+                    overlaps.add(new Reservation(
+                            rs.getInt("Id_reservation"),
+                            dateArriver,
+                            rs.getInt("nbr_passager"),
+                            rs.getString("id_client"),
+                            rs.getInt("Id_hotel"),
+                            rs.getInt("id_aeroport"),
+                            rs.getInt("TA")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du calcul des réservations chevauchantes", e);
+        }
+
+        return overlaps;
     }
 }
