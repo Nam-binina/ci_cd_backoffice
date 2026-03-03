@@ -11,10 +11,10 @@ INSERT INTO hotel (nom, id_aeroport) VALUES
 ('Ibis', 2),
 ('Lokanga', 3);
 
-INSERT INTO reservation (date_arriver, nbr_passager, id_client, Id_hotel, id_aeroport, TA) VALUES
-('2026-02-05 00:55:00', 5, '4631', 3, 2, 15),
-('2026-02-05 01:00:00', 1,  '4394', 3, 2, 30),
-('2026-02-09 01:30:00', 2,  '8054', 1, 1, 20);
+INSERT INTO reservation (date_arriver, nbr_passager, id_client, Id_hotel, id_aeroport) VALUES
+('2026-02-05 00:55:00', 5, '4631', 3, 2),
+('2026-02-05 01:00:00', 1,  '4394', 3, 2),
+('2026-02-09 01:30:00', 2,  '8054', 1, 1);
 
 INSERT INTO token (uid) VALUES
 (UUID()),
@@ -55,12 +55,15 @@ INSERT INTO consommation (description) VALUES
 ('Electrique'),
 ('Hybride');
 
-INSERT INTO voiture (immatriculation, nombre_place, id_consommation, vitesse_moyenne) VALUES
-('1234 TAA', 20, 1, 80.50),
-('5678 TBB', 10, 2, 75.00),
-('9012 TCC', 15, 1, 90.25),
-('3456 TDD', 2, 2, 82.00),
-('7890 TEE', 5, 1, 95.75);
+INSERT INTO voiture (immatriculation, nombre_place, id_consommation) VALUES
+('1234 TAA', 20, 1),
+('5678 TBB', 10, 2),
+('9012 TCC', 15, 1),
+('3456 TDD', 2, 2),
+('7890 TEE', 5, 1);
+
+INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
+(50.0, 10);
 
 SELECT * FROM aeroport;
 SELECT * FROM hotel;
@@ -70,3 +73,4 @@ SELECT * FROM hotel_hotel_distance;
 SELECT * FROM hotel_aeroport_distance;
 SELECT * FROM consommation;
 SELECT * FROM voiture;
+SELECT * FROM parametre;

@@ -10,7 +10,7 @@ import java.util.List;
 public class VoitureRepository {
 
     public List<Voiture> findClosestByRequiredSeats(int requiredSeats) {
-        String sql = "SELECT id, immatriculation, nombre_place, id_consommation, vitesse_moyenne " +
+    String sql = "SELECT id, immatriculation, nombre_place, id_consommation " +
                 "FROM voiture " +
                 "WHERE nombre_place >= ? " +
                 "AND nombre_place = (SELECT MIN(nombre_place) FROM voiture WHERE nombre_place >= ?) " +
@@ -26,13 +26,13 @@ public class VoitureRepository {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    voitures.add(new Voiture(
-                            rs.getInt("id"),
-                            rs.getString("immatriculation"),
-                            rs.getInt("nombre_place"),
-                            rs.getInt("id_consommation"),
-                            rs.getDouble("vitesse_moyenne")
-                    ));
+            voitures.add(new Voiture(
+                rs.getInt("id"),
+                rs.getString("immatriculation"),
+                rs.getInt("nombre_place"),
+                rs.getInt("id_consommation"),
+                0
+            ));
                 }
             }
         } catch (SQLException e) {
@@ -43,7 +43,7 @@ public class VoitureRepository {
     }
 
     public Voiture findBestByRequiredSeats(int requiredSeats) {
-        String sql = "SELECT v.id, v.immatriculation, v.nombre_place, v.id_consommation, v.vitesse_moyenne " +
+    String sql = "SELECT v.id, v.immatriculation, v.nombre_place, v.id_consommation " +
                 "FROM voiture v " +
                 "JOIN consommation c ON c.id = v.id_consommation " +
                 "WHERE v.nombre_place >= ? " +
@@ -62,13 +62,13 @@ public class VoitureRepository {
                     return null;
                 }
 
-                return new Voiture(
-                        rs.getInt("id"),
-                        rs.getString("immatriculation"),
-                        rs.getInt("nombre_place"),
-                        rs.getInt("id_consommation"),
-                        rs.getDouble("vitesse_moyenne")
-                );
+        return new Voiture(
+            rs.getInt("id"),
+            rs.getString("immatriculation"),
+            rs.getInt("nombre_place"),
+            rs.getInt("id_consommation"),
+            0
+        );
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors de la sélection de la meilleure voiture", e);

@@ -66,15 +66,17 @@ public class AssignationRepository {
     }
 
     public List<AssignationDetail> findAssignedByDate(LocalDate date) {
-        String sql = "SELECT a.id AS assignation_id, " +
-                "r.Id_reservation, r.date_arriver, r.nbr_passager, r.id_client, r.Id_hotel, " +
-                "IFNULL(r.id_aeroport, 0) AS id_aeroport, IFNULL(r.TA, 0) AS TA, " +
-                "v.id AS voiture_id, v.immatriculation, v.nombre_place, v.id_consommation, v.vitesse_moyenne " +
-                "FROM assignation a " +
-                "JOIN reservation r ON r.Id_reservation = a.id_reservation " +
-                "JOIN voiture v ON v.id = a.id_voiture " +
-                "WHERE DATE(r.date_arriver) = ? " +
-                "ORDER BY r.date_arriver ASC, r.Id_reservation ASC";
+    String sql = "SELECT a.id AS assignation_id, " +
+        "r.Id_reservation, r.date_arriver, r.nbr_passager, r.id_client, r.Id_hotel, " +
+        "IFNULL(r.id_aeroport, 0) AS id_aeroport, " +
+        "IFNULL((SELECT p.temps_attente FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS TA, " +
+        "v.id AS voiture_id, v.immatriculation, v.nombre_place, v.id_consommation, " +
+        "IFNULL((SELECT p.vitesse_moyenne FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS vitesse_moyenne " +
+        "FROM assignation a " +
+        "JOIN reservation r ON r.Id_reservation = a.id_reservation " +
+        "JOIN voiture v ON v.id = a.id_voiture " +
+        "WHERE DATE(r.date_arriver) = ? " +
+        "ORDER BY r.date_arriver ASC, r.Id_reservation ASC";
 
         List<AssignationDetail> details = new ArrayList<>();
 

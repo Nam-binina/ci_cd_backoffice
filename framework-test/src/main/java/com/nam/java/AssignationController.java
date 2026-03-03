@@ -124,8 +124,11 @@ public class AssignationController {
                     distanceAller = trajetAller;
                     distanceTotale = trajetAller * 2.0;
 
-                    if (dateDepartReel != null && voitureSelectionnee != null && voitureSelectionnee.getVitesseMoyenne() > 0) {
-                        long minutesAller = Math.round((distanceAller / voitureSelectionnee.getVitesseMoyenne()) * 60.0);
+                    Parametre parametre = new ParametreRepository().getCurrent();
+                    double vitesseMoyenne = (parametre != null) ? parametre.getVitesseMoyenne() : 0.0;
+
+                    if (dateDepartReel != null && vitesseMoyenne > 0) {
+                        long minutesAller = Math.round((distanceAller / vitesseMoyenne) * 60.0);
                         dateArriveeFinTrajet = dateDepartReel.plusMinutes(minutesAller);
                         dateRetourAeroport = dateArriveeFinTrajet.plusMinutes(minutesAller);
                     }

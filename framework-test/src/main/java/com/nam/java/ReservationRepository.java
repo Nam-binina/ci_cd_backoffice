@@ -11,7 +11,7 @@ import java.util.List;
 public class ReservationRepository {
 
     public List<Reservation> findAll() {
-        String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel, IFNULL(id_aeroport, 0) AS id_aeroport, IFNULL(TA, 0) AS TA FROM reservation ORDER BY Id_reservation DESC";
+    String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel, IFNULL(id_aeroport, 0) AS id_aeroport FROM reservation ORDER BY Id_reservation DESC";
         List<Reservation> reservations = new ArrayList<>();
 
         try (Connection conn = Connexion.getConnection();
@@ -25,8 +25,7 @@ public class ReservationRepository {
                 String idClient = rs.getString("id_client");
                 int idHotel = rs.getInt("Id_hotel");
                 int idAeroport = rs.getInt("id_aeroport");
-                int ta = rs.getInt("TA");
-                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, ta));
+                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, 0));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des réservations", e);
@@ -53,7 +52,7 @@ public class ReservationRepository {
     }
 
     public List<Reservation> findNotAssigned() {
-        String sql = "SELECT r.Id_reservation, r.date_arriver, r.nbr_passager, r.id_client, r.Id_hotel, IFNULL(r.id_aeroport, 0) AS id_aeroport, IFNULL(r.TA, 0) AS TA " +
+    String sql = "SELECT r.Id_reservation, r.date_arriver, r.nbr_passager, r.id_client, r.Id_hotel, IFNULL(r.id_aeroport, 0) AS id_aeroport " +
                 "FROM reservation r " +
                 "LEFT JOIN assignation a ON a.id_reservation = r.Id_reservation " +
                 "WHERE a.id IS NULL " +
@@ -72,8 +71,7 @@ public class ReservationRepository {
                 String idClient = rs.getString("id_client");
                 int idHotel = rs.getInt("Id_hotel");
                 int idAeroport = rs.getInt("id_aeroport");
-                int ta = rs.getInt("TA");
-                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, ta));
+                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, 0));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des réservations non assignées", e);
@@ -83,7 +81,7 @@ public class ReservationRepository {
     }
 
     public Reservation findById(int idReservation) {
-        String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel, IFNULL(id_aeroport, 0) AS id_aeroport, IFNULL(TA, 0) AS TA " +
+    String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel, IFNULL(id_aeroport, 0) AS id_aeroport " +
                 "FROM reservation WHERE Id_reservation = ?";
 
         try (Connection conn = Connexion.getConnection();
@@ -103,7 +101,7 @@ public class ReservationRepository {
                         rs.getString("id_client"),
                         rs.getInt("Id_hotel"),
                     rs.getInt("id_aeroport"),
-                        rs.getInt("TA")
+                        0
                 );
             }
         } catch (SQLException e) {
@@ -112,9 +110,10 @@ public class ReservationRepository {
     }
 
     public List<Reservation> findOverlappingForSelectedDeparture(int selectedReservationId) {
-        String sql = "SELECT r2.Id_reservation, r2.date_arriver, r2.nbr_passager, r2.id_client, r2.Id_hotel, IFNULL(r2.id_aeroport, 0) AS id_aeroport, IFNULL(r2.TA, 0) AS TA " +
+        String sql = "SELECT r2.Id_reservation, r2.date_arriver, r2.nbr_passager, r2.id_client, r2.Id_hotel, IFNULL(r2.id_aeroport, 0) AS id_aeroport, " +
+                "IFNULL((SELECT p.temps_attente FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS TA " +
                 "FROM reservation r1 " +
-                "JOIN reservation r2 ON r1.date_arriver BETWEEN r2.date_arriver AND DATE_ADD(r2.date_arriver, INTERVAL IFNULL(r2.TA, 0) MINUTE) " +
+                "JOIN reservation r2 ON r1.date_arriver BETWEEN r2.date_arriver AND DATE_ADD(r2.date_arriver, INTERVAL IFNULL((SELECT p.temps_attente FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) MINUTE) " +
             "AND IFNULL(r1.id_aeroport, -1) = IFNULL(r2.id_aeroport, -1) " +
                 "WHERE r1.Id_reservation = ? " +
                 "ORDER BY r2.date_arriver ASC, r2.Id_reservation ASC";
