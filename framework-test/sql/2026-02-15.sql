@@ -1,4 +1,6 @@
 -- Table token (MySQL)
+DROP TABLE IF EXISTS token;
+
 CREATE TABLE token (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uid VARCHAR(36) NOT NULL DEFAULT (UUID()),

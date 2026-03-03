@@ -100,4 +100,23 @@ public class ReservationController {
         mv.addItem("status", 200);
         return mv;
     }
+
+    @MyAnnotation(value = "/search/form", method = HttpMethod.GET)
+    public ModelView showSearchForm() {
+        ModelView mv = new ModelView();
+        mv.setJspName("reservationSearchForm");
+        return mv;
+    }
+
+    @MyAnnotation(value = "/search/result", method = HttpMethod.POST)
+    public ModelView showSearchResult(@MyParam("searchDate") String searchDate) {
+        ModelView mv = new ModelView();
+        if (searchDate == null || searchDate.trim().isEmpty()) {
+            mv.addItem("error", "Choisis une date avant de lancer la recherche");
+        } else {
+            mv.addItem("searchDate", searchDate);
+        }
+        mv.setJspName("reservationSearchResult");
+        return mv;
+    }
 }
