@@ -1,6 +1,8 @@
 package com.nam.java;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @MyAnnotation(value = "/assignation", method = HttpMethod.CONTROLLER)
@@ -221,5 +223,40 @@ public class AssignationController {
         }
         mv.setJspName("assignationList");
         return mv;
+    }
+
+    @MyAnnotation(value = "/filter", method = HttpMethod.GET)
+    public ModelView filterForm() {
+        ModelView mv = new ModelView();
+        mv.setJspName("assignationFilterForm");
+        return mv;
+    }
+
+    @MyAnnotation(value = "/filter/result", method = HttpMethod.POST)
+    public ModelView filterResult(@MyParam("date") String date) {
+        ModelView mv = new ModelView();
+
+        if (date == null || date.trim().isEmpty()) {
+            mv.addItem("error", "Veuillez choisir une date.");
+            mv.setJspName("assignationFilterForm");
+            return mv;
+        }
+
+        try {
+            LocalDate targetDate = LocalDate.parse(date.trim());
+            List<AssignationDetail> details = new AssignationRepository().findAssignedByDate(targetDate);
+            mv.addItem("date", date.trim());
+            mv.addItem("details", details);
+            mv.setJspName("assignationFilterResult");
+            return mv;
+        } catch (DateTimeParseException e) {
+            mv.addItem("error", "Format de date invalide.");
+            mv.setJspName("assignationFilterForm");
+            return mv;
+        } catch (Exception e) {
+            mv.addItem("error", e.getMessage());
+            mv.setJspName("assignationFilterForm");
+            return mv;
+        }
     }
 }

@@ -16,6 +16,7 @@
         <p>Choisir une action :</p>
         <a class="btn" href="${pageContext.request.contextPath}/assignation/method">Choisir la méthode d'assignation</a>
         <a class="btn" href="${pageContext.request.contextPath}/assignation/list">Voir la liste des assignations</a>
+    <a class="btn" href="${pageContext.request.contextPath}/assignation/filter">Filtrer par date</a>
     </div>
 </body>
 </html>
