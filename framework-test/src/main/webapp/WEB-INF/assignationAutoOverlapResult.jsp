@@ -39,6 +39,23 @@
             List<Voiture> voituresProposees = (List<Voiture>) request.getAttribute("voituresProposees");
             Voiture voitureSelectionnee = (Voiture) request.getAttribute("voitureSelectionnee");
             DateTimeFormatter displayDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+            StringBuilder reservationIdsBuilder = new StringBuilder();
+            if (selected != null) {
+                reservationIdsBuilder.append(selected.getIdReservation());
+            }
+            if (overlaps != null) {
+                for (Reservation reservation : overlaps) {
+                    if (selected != null && reservation.getIdReservation() == selected.getIdReservation()) {
+                        continue;
+                    }
+                    if (reservationIdsBuilder.length() > 0) {
+                        reservationIdsBuilder.append(",");
+                    }
+                    reservationIdsBuilder.append(reservation.getIdReservation());
+                }
+            }
+            String reservationIds = reservationIdsBuilder.toString();
         %>
 
         <% if (selected != null) { %>
@@ -162,6 +179,14 @@
                     </tr>
                 <% } %>
             </table>
+        <% } %>
+
+        <% if (voitureSelectionnee != null && reservationIds != null && !reservationIds.trim().isEmpty()) { %>
+            <form action="${pageContext.request.contextPath}/assignation/method/auto/confirm" method="post">
+                <input type="hidden" name="reservationIds" value="<%= reservationIds %>">
+                <input type="hidden" name="voitureId" value="<%= voitureSelectionnee.getId() %>">
+                <button type="submit">✅ Confirmer l'assignation</button>
+            </form>
         <% } %>
 
         <a class="link" href="${pageContext.request.contextPath}/assignation/method/auto">← Retour formulaire automatique</a>

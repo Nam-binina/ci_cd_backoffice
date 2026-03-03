@@ -155,6 +155,54 @@ public class AssignationController {
         return mv;
     }
 
+    @MyAnnotation(value = "/method/auto/confirm", method = HttpMethod.POST)
+    public ModelView confirmAutomatic(
+            @MyParam("reservationIds") String reservationIds,
+            @MyParam("voitureId") int voitureId
+    ) {
+        ModelView mv = new ModelView();
+        mv.addItem("modeChoisi", "Automatique");
+
+        if (reservationIds == null || reservationIds.trim().isEmpty()) {
+            mv.addItem("message", "Aucune réservation à assigner.");
+            mv.setJspName("assignationMethodResult");
+            return mv;
+        }
+
+        if (voitureId <= 0) {
+            mv.addItem("message", "Voiture invalidée ou manquante.");
+            mv.setJspName("assignationMethodResult");
+            return mv;
+        }
+
+        String[] tokens = reservationIds.split(",");
+        java.util.Set<Integer> assignedReservationIds = new AssignationRepository().findAssignedReservationIds();
+        AssignationRepository assignationRepository = new AssignationRepository();
+        int inserted = 0;
+        int skipped = 0;
+
+        for (String token : tokens) {
+            if (token == null || token.trim().isEmpty()) {
+                continue;
+            }
+            try {
+                int idReservation = Integer.parseInt(token.trim());
+                if (assignedReservationIds.contains(idReservation)) {
+                    skipped++;
+                    continue;
+                }
+                assignationRepository.insert(new Assignation(0, idReservation, voitureId));
+                inserted++;
+            } catch (NumberFormatException e) {
+                skipped++;
+            }
+        }
+
+        mv.addItem("message", "Assignations enregistrées : " + inserted + ", ignorées : " + skipped + ".");
+        mv.setJspName("assignationMethodResult");
+        return mv;
+    }
+
     @MyAnnotation(value = "/method/manual", method = HttpMethod.GET)
     public ModelView manualForm() {
         ModelView mv = new ModelView();

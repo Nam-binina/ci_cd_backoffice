@@ -9,6 +9,20 @@ import java.util.List;
 
 public class AssignationRepository {
 
+    public void insert(Assignation assignation) {
+        String sql = "INSERT INTO assignation (id_reservation, id_voiture) VALUES (?, ?)";
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, assignation.getIdReservation());
+            ps.setInt(2, assignation.getIdVoiture());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de l'insertion de l'assignation : " + e.getMessage(), e);
+        }
+    }
+
     public List<Assignation> findAll() {
         String sql = "SELECT id, id_reservation, id_voiture FROM assignation ORDER BY id DESC";
         List<Assignation> assignations = new ArrayList<>();
