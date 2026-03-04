@@ -30,6 +30,9 @@
             <a href="${pageContext.request.contextPath}/token/form">
                 <span class="icon">🆕</span> Créer un token
             </a>
+            <a href="${pageContext.request.contextPath}/assignation/page">
+                <span class="icon">🚗</span> Liste des assignations
+            </a>
         </div>
     </div>
 </body>
