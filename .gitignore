@@ -1,3 +1,4 @@
 framework-test/sql/executer-sql-ordre-date.sh
 framework-test/deploy.sh
 framework-test/src/main/java/com/nam/java/Connexion.java
+framework-test/deploy.sh
