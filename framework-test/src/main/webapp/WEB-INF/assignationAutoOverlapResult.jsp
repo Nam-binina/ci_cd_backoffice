@@ -9,20 +9,17 @@
 <html>
 <head>
     <title>Chevauchement automatique</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        .selected { background: #f1f8e9; border: 1px solid #c5e1a5; padding: 12px; border-radius: 6px; margin-bottom: 18px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .link { display: inline-block; margin-top: 16px; margin-right: 12px; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>Réservations qui chevauchent la date choisie</h1>
+        <h1 class="page-title">Réservations qui chevauchent la date choisie</h1>
 
         <%
             Reservation selected = (Reservation) request.getAttribute("selectedReservation");
@@ -192,5 +189,8 @@
         <a class="link" href="${pageContext.request.contextPath}/assignation/method/auto">← Retour formulaire automatique</a>
         <a class="link" href="${pageContext.request.contextPath}/assignation/method">Retour choix de méthode</a>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

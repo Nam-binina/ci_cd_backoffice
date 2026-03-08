@@ -3,21 +3,17 @@
 <html>
 <head>
     <title>Choix méthode d'assignation</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .actions { margin-top: 20px; }
-        .btn { border: none; cursor: pointer; margin-right: 10px; padding: 12px 18px; color: white; border-radius: 6px; font-size: 15px; }
-        .btn-auto { background: #4CAF50; }
-        .btn-auto:hover { background: #45a049; }
-        .btn-manual { background: #1e88e5; }
-        .btn-manual:hover { background: #1976d2; }
-        .link { display: inline-block; margin-top: 16px; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>Choisir la méthode d'assignation</h1>
+        <h1 class="page-title">Choisir la méthode d'assignation</h1>
         <p>Sélectionne le mode de traitement :</p>
 
         <div class="actions">
@@ -27,5 +23,8 @@
 
         <a class="link" href="${pageContext.request.contextPath}/assignation/page">← Retour page assignation</a>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

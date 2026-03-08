@@ -5,8 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulaire</title>
+    <style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <form action="<%= request.getContextPath() %>/TestClass/form" method="post">
         
         <label for="nom">Nom :</label>
@@ -21,5 +27,8 @@
 
         <button type="submit">Envoyer</button>
     </form>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

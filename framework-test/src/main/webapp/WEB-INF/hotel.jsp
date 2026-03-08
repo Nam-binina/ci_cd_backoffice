@@ -5,8 +5,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Hotel</title>
+    <style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
 <%
     String error = (String) request.getAttribute("error");
     Hotel hotel = (Hotel) request.getAttribute("hotel");
@@ -26,5 +32,8 @@
 <%
     }
 %>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>
