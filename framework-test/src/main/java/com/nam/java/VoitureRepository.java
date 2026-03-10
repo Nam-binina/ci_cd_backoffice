@@ -7,8 +7,49 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository d'accès aux voitures pour proposer un véhicule adapté
+ * au nombre de passagers d'une assignation.
+ */
 public class VoitureRepository {
 
+    public List<Voiture> findAllOrderBySeatsAsc() {
+        String sql = "SELECT id, immatriculation, nombre_place, id_consommation " +
+                "FROM voiture " +
+                "ORDER BY nombre_place ASC, id ASC";
+
+        List<Voiture> voitures = new ArrayList<>();
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                voitures.add(new Voiture(
+                        rs.getInt("id"),
+                        rs.getString("immatriculation"),
+                        rs.getInt("nombre_place"),
+                        rs.getInt("id_consommation"),
+                        0
+                ));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du chargement des voitures", e);
+        }
+
+        return voitures;
+    }
+
+    /**
+     * Retourne toutes les voitures ayant la capacité minimale suffisante.
+     *
+     * <p>Exemple : si {@code requiredSeats = 7}, la méthode cherche les voitures
+     * de 7 places (si elles existent), sinon 8, 9, etc.</p>
+     *
+     * @param requiredSeats nombre de places nécessaires
+     * @return liste des voitures correspondant à la capacité minimale requise
+     * @throws RuntimeException si une erreur SQL survient
+     */
     public List<Voiture> findClosestByRequiredSeats(int requiredSeats) {
     String sql = "SELECT id, immatriculation, nombre_place, id_consommation " +
                 "FROM voiture " +
@@ -42,6 +83,20 @@ public class VoitureRepository {
         return voitures;
     }
 
+    /**
+     * Retourne une seule voiture optimale pour le nombre de places demandé.
+     *
+     * <p>La priorité est :</p>
+     * <ol>
+     *   <li>capacité minimale suffisante,</li>
+     *   <li>type Diesel en priorité si disponible,</li>
+     *   <li>choix aléatoire en cas d'égalité.</li>
+     * </ol>
+     *
+     * @param requiredSeats nombre de places nécessaires
+     * @return voiture retenue, ou {@code null} si aucune voiture n'est disponible
+     * @throws RuntimeException si une erreur SQL survient
+     */
     public Voiture findBestByRequiredSeats(int requiredSeats) {
     String sql = "SELECT v.id, v.immatriculation, v.nombre_place, v.id_consommation " +
                 "FROM voiture v " +

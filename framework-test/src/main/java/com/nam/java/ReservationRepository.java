@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public class ReservationRepository {
                 String idClient = rs.getString("id_client");
                 int idHotel = rs.getInt("Id_hotel");
                 int idAeroport = rs.getInt("id_aeroport");
-                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, 0));
+                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des réservations", e);
@@ -71,7 +72,7 @@ public class ReservationRepository {
                 String idClient = rs.getString("id_client");
                 int idHotel = rs.getInt("Id_hotel");
                 int idAeroport = rs.getInt("id_aeroport");
-                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport, 0));
+                reservations.add(new Reservation(id, dateArriver, nbrPassager, idClient, idHotel, idAeroport));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des réservations non assignées", e);
@@ -100,8 +101,7 @@ public class ReservationRepository {
                         rs.getInt("nbr_passager"),
                         rs.getString("id_client"),
                         rs.getInt("Id_hotel"),
-                    rs.getInt("id_aeroport"),
-                        0
+                    rs.getInt("id_aeroport")
                 );
             }
         } catch (SQLException e) {
@@ -110,8 +110,7 @@ public class ReservationRepository {
     }
 
     public List<Reservation> findOverlappingForSelectedDeparture(int selectedReservationId) {
-        String sql = "SELECT r2.Id_reservation, r2.date_arriver, r2.nbr_passager, r2.id_client, r2.Id_hotel, IFNULL(r2.id_aeroport, 0) AS id_aeroport, " +
-                "IFNULL((SELECT p.temps_attente FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS TA " +
+        String sql = "SELECT r2.Id_reservation, r2.date_arriver, r2.nbr_passager, r2.id_client, r2.Id_hotel, IFNULL(r2.id_aeroport, 0) AS id_aeroport " +
                 "FROM reservation r1 " +
                 "JOIN reservation r2 ON r1.date_arriver BETWEEN r2.date_arriver AND DATE_ADD(r2.date_arriver, INTERVAL IFNULL((SELECT p.temps_attente FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) MINUTE) " +
             "AND IFNULL(r1.id_aeroport, -1) = IFNULL(r2.id_aeroport, -1) " +
@@ -133,8 +132,7 @@ public class ReservationRepository {
                             rs.getInt("nbr_passager"),
                             rs.getString("id_client"),
                             rs.getInt("Id_hotel"),
-                            rs.getInt("id_aeroport"),
-                            rs.getInt("TA")
+                            rs.getInt("id_aeroport")
                     ));
                 }
             }
@@ -143,5 +141,38 @@ public class ReservationRepository {
         }
 
         return overlaps;
+    }
+
+    public List<Reservation> findByDate(LocalDate targetDate) {
+        String sql = "SELECT Id_reservation, date_arriver, nbr_passager, id_client, Id_hotel, IFNULL(id_aeroport, 0) AS id_aeroport " +
+                "FROM reservation " +
+                "WHERE DATE(date_arriver) = ? " +
+                "ORDER BY date_arriver ASC, Id_reservation ASC";
+
+        List<Reservation> reservations = new ArrayList<>();
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, targetDate);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LocalDateTime dateArriver = rs.getObject("date_arriver", LocalDateTime.class);
+                    reservations.add(new Reservation(
+                            rs.getInt("Id_reservation"),
+                            dateArriver,
+                            rs.getInt("nbr_passager"),
+                            rs.getString("id_client"),
+                            rs.getInt("Id_hotel"),
+                            rs.getInt("id_aeroport")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du chargement des réservations par date", e);
+        }
+
+        return reservations;
     }
 }

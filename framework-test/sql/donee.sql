@@ -13,8 +13,10 @@ INSERT INTO hotel (nom, id_aeroport) VALUES
 
 INSERT INTO reservation (date_arriver, nbr_passager, id_client, Id_hotel, id_aeroport) VALUES
 ('2026-02-05 00:55:00', 5, '4631', 3, 2),
-('2026-02-05 01:00:00', 1,  '4394', 3, 2),
-('2026-02-09 01:30:00', 2,  '8054', 1, 1);
+('2026-02-05 01:00:00', 3,  '4394', 3, 2),
+('2026-02-05 01:10:00', 2,  '4394', 3, 2),
+('2026-02-05 01:30:00', 1,  '4394', 3, 2),
+('2026-02-09 01:15:00', 2,  '8054', 1, 2);
 
 INSERT INTO token (uid) VALUES
 (UUID()),
@@ -62,15 +64,15 @@ INSERT INTO voiture (immatriculation, nombre_place, id_consommation) VALUES
 ('3456 TDD', 2, 2),
 ('7890 TEE', 5, 1);
 
-INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
-(50.0, 10);
+INSERT INTO parametre (vitesse_moyenne, temps_attente)
+VALUES (50.0, 10);
 
 SELECT * FROM aeroport;
 SELECT * FROM hotel;
 SELECT * FROM reservation;
 SELECT * FROM token;
 SELECT * FROM hotel_hotel_distance;
+
 SELECT * FROM hotel_aeroport_distance;
 SELECT * FROM consommation;
 SELECT * FROM voiture;
-SELECT * FROM parametre;
