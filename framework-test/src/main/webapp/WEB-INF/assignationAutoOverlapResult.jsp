@@ -1,9 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
 <%@ page import="com.nam.java.Reservation" %>
-<%@ page import="com.nam.java.Voiture" %>
-<%@ page import="java.time.LocalDateTime" %>
+<%@ page import="com.nam.java.AssignationController.GroupAssignmentResult" %>
+<%@ page import="com.nam.java.AssignationController.VehicleAssignmentPlan" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <!DOCTYPE html>
 <html>

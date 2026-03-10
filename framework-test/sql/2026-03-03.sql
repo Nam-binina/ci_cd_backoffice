@@ -5,10 +5,7 @@ CREATE TABLE IF NOT EXISTS parametre(
    PRIMARY KEY(Id_parametre)
 );
 
--- Valeurs par défaut (modifiable selon besoin)
-DELETE FROM parametre;
-INSERT INTO parametre (vitesse_moyenne, temps_attente)
-VALUES (50.0, 10);
+
 
 -- Suppression des anciennes colonnes spécifiques par voiture/réservation
 SET @has_voiture_vitesse := (

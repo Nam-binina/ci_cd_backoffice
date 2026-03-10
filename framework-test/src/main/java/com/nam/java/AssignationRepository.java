@@ -69,7 +69,6 @@ public class AssignationRepository {
     String sql = "SELECT a.id AS assignation_id, " +
         "r.Id_reservation, r.date_arriver, r.nbr_passager, r.id_client, r.Id_hotel, " +
         "IFNULL(r.id_aeroport, 0) AS id_aeroport, " +
-        "IFNULL((SELECT p.temps_attente FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS TA, " +
         "v.id AS voiture_id, v.immatriculation, v.nombre_place, v.id_consommation, " +
         "IFNULL((SELECT p.vitesse_moyenne FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS vitesse_moyenne " +
         "FROM assignation a " +
@@ -94,8 +93,7 @@ public class AssignationRepository {
                             rs.getInt("nbr_passager"),
                             rs.getString("id_client"),
                             rs.getInt("Id_hotel"),
-                            rs.getInt("id_aeroport"),
-                            rs.getInt("TA")
+                            rs.getInt("id_aeroport")
                     );
 
                     Voiture voiture = new Voiture(
