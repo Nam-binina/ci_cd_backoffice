@@ -9,17 +9,28 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Types;
 
 public class AssignationRepository {
 
     public void insert(Assignation assignation) {
-        String sql = "INSERT INTO assignation (id_reservation, id_voiture) VALUES (?, ?)";
+        String sql = "INSERT INTO assignation (id_reservation, id_voiture, debut_trajet, fin_trajet) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = Connexion.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, assignation.getIdReservation());
             ps.setInt(2, assignation.getIdVoiture());
+            if (assignation.getDebutTrajet() != null) {
+                ps.setDate(3, Date.valueOf(assignation.getDebutTrajet()));
+            } else {
+                ps.setNull(3, Types.DATE);
+            }
+            if (assignation.getFinTrajet() != null) {
+                ps.setDate(4, Date.valueOf(assignation.getFinTrajet()));
+            } else {
+                ps.setNull(4, Types.DATE);
+            }
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors de l'insertion de l'assignation : " + e.getMessage(), e);
@@ -27,7 +38,7 @@ public class AssignationRepository {
     }
 
     public List<Assignation> findAll() {
-        String sql = "SELECT id, id_reservation, id_voiture FROM assignation ORDER BY id DESC";
+        String sql = "SELECT id, id_reservation, id_voiture, debut_trajet, fin_trajet FROM assignation ORDER BY id DESC";
         List<Assignation> assignations = new ArrayList<>();
 
         try (Connection conn = Connexion.getConnection();
@@ -38,13 +49,53 @@ public class AssignationRepository {
                 int id = rs.getInt("id");
                 int idReservation = rs.getInt("id_reservation");
                 int idVoiture = rs.getInt("id_voiture");
-                assignations.add(new Assignation(id, idReservation, idVoiture));
+                Date debutTrajetDate = rs.getDate("debut_trajet");
+                Date finTrajetDate = rs.getDate("fin_trajet");
+                LocalDate debutTrajet = (debutTrajetDate != null) ? debutTrajetDate.toLocalDate() : null;
+                LocalDate finTrajet = (finTrajetDate != null) ? finTrajetDate.toLocalDate() : null;
+                assignations.add(new Assignation(id, idReservation, idVoiture, debutTrajet, finTrajet));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des assignations", e);
         }
 
         return assignations;
+    }
+
+    public boolean isCarAvailable(int voitureId, LocalDate debutTrajet, LocalDate finTrajet) {
+        if (debutTrajet == null || finTrajet == null) {
+            return true;
+        }
+
+        if (finTrajet.isBefore(debutTrajet)) {
+            LocalDate swap = debutTrajet;
+            debutTrajet = finTrajet;
+            finTrajet = swap;
+        }
+
+        String sql = "SELECT COUNT(*) AS cnt " +
+                "FROM assignation " +
+                "WHERE id_voiture = ? " +
+                "AND debut_trajet IS NOT NULL " +
+                "AND fin_trajet IS NOT NULL " +
+                "AND NOT (fin_trajet < ? OR debut_trajet > ?)";
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, voitureId);
+            ps.setDate(2, Date.valueOf(debutTrajet));
+            ps.setDate(3, Date.valueOf(finTrajet));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return true;
+                }
+                return rs.getInt("cnt") == 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du controle de disponibilite de la voiture", e);
+        }
     }
 
     public java.util.Set<Integer> findAssignedReservationIds() {
@@ -69,7 +120,6 @@ public class AssignationRepository {
     String sql = "SELECT a.id AS assignation_id, " +
         "r.Id_reservation, r.date_arriver, r.nbr_passager, r.id_client, r.Id_hotel, " +
         "IFNULL(r.id_aeroport, 0) AS id_aeroport, " +
-        "IFNULL((SELECT p.temps_attente FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS TA, " +
         "v.id AS voiture_id, v.immatriculation, v.nombre_place, v.id_consommation, " +
         "IFNULL((SELECT p.vitesse_moyenne FROM parametre p ORDER BY p.Id_parametre DESC LIMIT 1), 0) AS vitesse_moyenne " +
         "FROM assignation a " +
@@ -94,8 +144,7 @@ public class AssignationRepository {
                             rs.getInt("nbr_passager"),
                             rs.getString("id_client"),
                             rs.getInt("Id_hotel"),
-                            rs.getInt("id_aeroport"),
-                            rs.getInt("TA")
+                            rs.getInt("id_aeroport")
                     );
 
                     Voiture voiture = new Voiture(

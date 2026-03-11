@@ -1,7 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.List" %>
-<%@ page import="com.nam.java.Reservation" %>
-<%@ page import="java.time.format.DateTimeFormatter" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -29,25 +26,9 @@
 
         <form action="${pageContext.request.contextPath}/assignation/method/auto/save" method="post">
             <div class="field">
-                <label for="idReservation">Réservation non encore assignée</label>
-                <input id="idReservation" name="idReservation" list="reservationOptions" placeholder="Choisir une réservation" required />
-                <datalist id="reservationOptions">
-                    <%
-                        DateTimeFormatter displayDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                        List<Reservation> reservations = (List<Reservation>) request.getAttribute("reservations");
-                        if (reservations != null) {
-                            for (Reservation r : reservations) {
-                                String displayDate = (r.getDateArriver() != null)
-                                        ? r.getDateArriver().format(displayDateFormatter)
-                                        : "-";
-                    %>
-                        <option value="<%= r.getIdReservation() %>">ID <%= r.getIdReservation() %> | Client <%= r.getIdClient() %> | Date <%= displayDate %> | Hôtel <%= r.getIdHotel() %></option>
-                    <%
-                            }
-                        }
-                    %>
-                </datalist>
-                <p class="hint">La liste contient uniquement les réservations qui n'existent pas encore dans la table assignation.</p>
+                <label for="date">Date d'arrivée (sans heure)</label>
+                <input id="date" name="date" type="date" required />
+                <p class="hint">Le système va charger toutes les réservations de cette date (peu importe l'heure).</p>
             </div>
             <button type="submit" class="btn">Enregistrer (placeholder)</button>
         </form>

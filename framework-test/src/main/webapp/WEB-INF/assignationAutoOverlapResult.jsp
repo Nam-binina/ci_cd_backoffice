@@ -1,16 +1,23 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
 <%@ page import="com.nam.java.Reservation" %>
-<%@ page import="com.nam.java.Voiture" %>
-<%@ page import="java.time.LocalDateTime" %>
+<%@ page import="com.nam.java.AssignationController.GroupAssignmentResult" %>
+<%@ page import="com.nam.java.AssignationController.VehicleAssignmentPlan" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chevauchement automatique</title>
+    <title>Réservations par date</title>
     
     <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .link { display: inline-block; margin-top: 16px; margin-right: 12px; }
+    </style>
 <%@ include file="/assets/theme.css" %>
 </style>
 </head>
@@ -19,69 +26,107 @@
     <main class="page-main">
         <section class="content-card">
     <div class="container">
-        <h1 class="page-title">Réservations qui chevauchent la date choisie</h1>
+        <h1 class="page-title">Liste des réservations par date</h1>
 
         <%
-            Reservation selected = (Reservation) request.getAttribute("selectedReservation");
-            List<Reservation> overlaps = (List<Reservation>) request.getAttribute("overlaps");
-            Map<Integer, Boolean> assignmentStatus = (Map<Integer, Boolean>) request.getAttribute("assignmentStatus");
-            Integer totalPassagers = (Integer) request.getAttribute("totalPassagers");
-            LocalDateTime dateDepartReel = (LocalDateTime) request.getAttribute("dateDepartReel");
-            List<Integer> hotelsItineraire = (List<Integer>) request.getAttribute("hotelsItineraire");
-            Double distanceAller = (Double) request.getAttribute("distanceAller");
-            Double distanceTotale = (Double) request.getAttribute("distanceTotale");
-            LocalDateTime dateArriveeFinTrajet = (LocalDateTime) request.getAttribute("dateArriveeFinTrajet");
-            LocalDateTime dateRetourAeroport = (LocalDateTime) request.getAttribute("dateRetourAeroport");
-            String trajetMessage = (String) request.getAttribute("trajetMessage");
-            List<Voiture> voituresProposees = (List<Voiture>) request.getAttribute("voituresProposees");
-            Voiture voitureSelectionnee = (Voiture) request.getAttribute("voitureSelectionnee");
+            List<Reservation> reservationsByDate = (List<Reservation>) request.getAttribute("reservationsByDate");
+            List<List<Reservation>> reservationGroups = (List<List<Reservation>>) request.getAttribute("reservationGroups");
+            List<GroupAssignmentResult> groupAssignmentResults = (List<GroupAssignmentResult>) request.getAttribute("groupAssignmentResults");
+            Integer taMinutes = (Integer) request.getAttribute("taMinutes");
+            java.time.LocalDate dateSelectionnee = (java.time.LocalDate) request.getAttribute("dateSelectionnee");
             DateTimeFormatter displayDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-            StringBuilder reservationIdsBuilder = new StringBuilder();
-            if (selected != null) {
-                reservationIdsBuilder.append(selected.getIdReservation());
-            }
-            if (overlaps != null) {
-                for (Reservation reservation : overlaps) {
-                    if (selected != null && reservation.getIdReservation() == selected.getIdReservation()) {
-                        continue;
-                    }
-                    if (reservationIdsBuilder.length() > 0) {
-                        reservationIdsBuilder.append(",");
-                    }
-                    reservationIdsBuilder.append(reservation.getIdReservation());
-                }
-            }
-            String reservationIds = reservationIdsBuilder.toString();
         %>
 
-        <% if (selected != null) { %>
-            <%
-                String selectedDate = (selected.getDateArriver() != null)
-                        ? selected.getDateArriver().format(displayDateFormatter)
-                        : "-";
-            %>
-            <div class="selected">
-                <strong>Réservation choisie :</strong>
-                ID <%= selected.getIdReservation() %> |
-                Date <%= selectedDate %> |
-                Passagers <%= selected.getNbrPassager() %> |
-                Client <%= selected.getIdClient() %> |
-                Hôtel <%= selected.getIdHotel() %> |
-                Aéroport <%= selected.getIdAeroport() %> |
-                TA <%= selected.getTa() %> min |
-                Statut <%= (assignmentStatus != null && Boolean.TRUE.equals(assignmentStatus.get(selected.getIdReservation()))) ? "Déjà assignée" : "Non assignée" %>
-            </div>
-            <p>Filtre appliqué : même aéroport que la réservation choisie (id_aeroport = <strong><%= selected.getIdAeroport() %></strong>).</p>
+        <% if (dateSelectionnee != null) { %>
+            <p>Date sélectionnée : <strong><%= dateSelectionnee %></strong></p>
         <% } %>
 
-        <% if (overlaps == null || overlaps.isEmpty()) { %>
-            <p>Aucune réservation chevauchante trouvée.</p>
+        <% if (taMinutes != null) { %>
+            <p>TA utilisé pour le regroupement : <strong><%= taMinutes %> min</strong></p>
+        <% } %>
+
+        <% if (reservationGroups != null && !reservationGroups.isEmpty()) { %>
+            <h2>Groupes par TA</h2>
+            <ul>
+                <% for (int groupIndex = 0; groupIndex < reservationGroups.size(); groupIndex++) {
+                    List<Reservation> group = reservationGroups.get(groupIndex);
+                    StringBuilder ids = new StringBuilder();
+                    for (Reservation reservation : group) {
+                        if (ids.length() > 0) {
+                            ids.append(", ");
+                        }
+                        ids.append(reservation.getIdReservation());
+                    }
+                %>
+                    <li>Groupe <%= (groupIndex + 1) %> : IDs <strong><%= ids %></strong></li>
+                <% } %>
+            </ul>
+        <% } %>
+
+        <% if (groupAssignmentResults != null && !groupAssignmentResults.isEmpty()) { %>
+            <h2>Voitures par groupe</h2>
+            <% for (GroupAssignmentResult result : groupAssignmentResults) { %>
+                <h3>Groupe <%= result.getGroupIndex() %> (IDs: <%= result.getReservationIds() %>)</h3>
+
+                <% if (result.getPlans() == null || result.getPlans().isEmpty()) { %>
+                    <p>Aucune voiture affectée.</p>
+                <% } else { %>
+                    <ul>
+                        <% for (VehicleAssignmentPlan plan : result.getPlans()) {
+                            StringBuilder reservationsText = new StringBuilder();
+                            for (Reservation reservation : plan.getReservations()) {
+                                if (reservationsText.length() > 0) {
+                                    reservationsText.append(" | ");
+                                }
+                                reservationsText.append("ID ")
+                                        .append(reservation.getIdReservation())
+                                        .append(" (")
+                                        .append(reservation.getNbrPassager())
+                                        .append(" passagers)");
+                            }
+                        %>
+                            <li>
+                                Voiture ID <strong><%= plan.getVoiture().getId() %></strong>
+                                (<%= plan.getVoiture().getNombrePlace() %> places)
+                                → <%= reservationsText %>
+                                | Occupé: <%= plan.getUsedSeats() %>
+                                | Reste: <%= plan.getRemainingSeats() %>
+                                <br/>
+                                Date départ: <strong><%= plan.getDateDepart() != null ? plan.getDateDepart().format(displayDateFormatter) : "-" %></strong>
+                                | Trajet optimum: <strong><%= plan.getTrajetOptimum() != null ? plan.getTrajetOptimum() : "-" %></strong>
+                                | Total km: <strong><%= plan.getTotalKmTrajet() != null ? String.format(java.util.Locale.US, "%.2f", plan.getTotalKmTrajet()) : "-" %></strong>
+                                | Vitesse moyenne: <strong><%= plan.getVitesseMoyenne() != null ? String.format(java.util.Locale.US, "%.2f", plan.getVitesseMoyenne()) : "-" %></strong>
+                                | Retour aéroport: <strong><%= plan.getDateRetourAeroport() != null ? plan.getDateRetourAeroport().format(displayDateFormatter) : "-" %></strong>
+                            </li>
+                        <% } %>
+                    </ul>
+                <% } %>
+
+                <% if (result.getUnassignedReservations() != null && !result.getUnassignedReservations().isEmpty()) { %>
+                    <p>
+                        Non affectées:
+                        <%
+                            StringBuilder missingText = new StringBuilder();
+                            for (Reservation reservation : result.getUnassignedReservations()) {
+                                if (missingText.length() > 0) {
+                                    missingText.append(", ");
+                                }
+                                missingText.append("ID ")
+                                        .append(reservation.getIdReservation())
+                                        .append(" (")
+                                        .append(reservation.getNbrPassager())
+                                        .append(" passagers)");
+                            }
+                        %>
+                        <strong><%= missingText %></strong>
+                    </p>
+                <% } %>
+            <% } %>
+        <% } %>
+
+        <% if (reservationsByDate == null || reservationsByDate.isEmpty()) { %>
+            <p>Aucune réservation trouvée pour cette date.</p>
         <% } else { %>
-            <p>
-                Date de départ réel (plus grande date de la liste chevauchante) :
-                <strong><%= dateDepartReel != null ? dateDepartReel.format(displayDateFormatter) : "-" %></strong>
-            </p>
             <table>
                 <tr>
                     <th>ID</th>
@@ -90,100 +135,23 @@
                     <th>Client</th>
                     <th>Hôtel</th>
                     <th>Aéroport</th>
-                    <th>TA (min)</th>
-                    <th>Assignation</th>
                 </tr>
-                <% for (Reservation reservation : overlaps) { %>
+                <% for (Reservation reservation : reservationsByDate) { %>
                     <%
-                        String overlapDate = (reservation.getDateArriver() != null)
+                        String reservationDate = (reservation.getDateArriver() != null)
                                 ? reservation.getDateArriver().format(displayDateFormatter)
                                 : "-";
-                        boolean isAssigned = assignmentStatus != null
-                                && Boolean.TRUE.equals(assignmentStatus.get(reservation.getIdReservation()));
                     %>
                     <tr>
                         <td><%= reservation.getIdReservation() %></td>
-                        <td><%= overlapDate %></td>
+                        <td><%= reservationDate %></td>
                         <td><%= reservation.getNbrPassager() %></td>
                         <td><%= reservation.getIdClient() %></td>
                         <td><%= reservation.getIdHotel() %></td>
                         <td><%= reservation.getIdAeroport() %></td>
-                        <td><%= reservation.getTa() %></td>
-                        <td><%= isAssigned ? "Déjà assignée" : "Non assignée" %></td>
                     </tr>
                 <% } %>
             </table>
-        <% } %>
-
-        <h2>Trajet estimé</h2>
-        <% if (trajetMessage != null && !trajetMessage.trim().isEmpty()) { %>
-            <p><%= trajetMessage %></p>
-        <% } else { %>
-            <p>
-                Itinéraire hôtels (ordre non optimisé) :
-                <strong><%= hotelsItineraire != null ? hotelsItineraire : java.util.Collections.emptyList() %></strong>
-            </p>
-            <p>
-                Distance aller : <strong><%= distanceAller != null ? String.format(java.util.Locale.US, "%.2f", distanceAller) : "0.00" %> km</strong>
-                | Distance totale (aller-retour) :
-                <strong><%= distanceTotale != null ? String.format(java.util.Locale.US, "%.2f", distanceTotale) : "0.00" %> km</strong>
-            </p>
-            <p>
-                Date de départ réel :
-                <strong><%= dateDepartReel != null ? dateDepartReel.format(displayDateFormatter) : "-" %></strong>
-                | Date d'arrivée fin trajet (aller) :
-                <strong><%= dateArriveeFinTrajet != null ? dateArriveeFinTrajet.format(displayDateFormatter) : "-" %></strong>
-            </p>
-            <p>
-                Date/heure de retour vers l'aéroport :
-                <strong><%= dateRetourAeroport != null ? dateRetourAeroport.format(displayDateFormatter) : "-" %></strong>
-            </p>
-        <% } %>
-
-        <h2>Voitures proposées</h2>
-        <% if (totalPassagers != null) { %>
-            <p>Total passagers de la liste chevauchante : <strong><%= totalPassagers %></strong></p>
-            <p>Voitures avec nombre de places suffisant et le plus proche du total :</p>
-        <% } %>
-
-        <% if (voituresProposees == null || voituresProposees.isEmpty()) { %>
-            <p>Aucune voiture ne possède un nombre de places supérieur ou égal à <%= totalPassagers != null ? totalPassagers : 0 %>.</p>
-        <% } else { %>
-            <% if (voitureSelectionnee != null) { %>
-                <p>
-                    <strong>Voiture retenue (règle: proche, Diesel prioritaire, sinon random):</strong>
-                    ID <%= voitureSelectionnee.getId() %> |
-                    Immatriculation <%= voitureSelectionnee.getImmatriculation() %> |
-                    Places <%= voitureSelectionnee.getNombrePlace() %> |
-                    ID Consommation <%= voitureSelectionnee.getIdConsommation() %>
-                </p>
-            <% } %>
-            <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Immatriculation</th>
-                    <th>Nombre de places</th>
-                    <th>ID Consommation</th>
-                    <th>Vitesse moyenne</th>
-                </tr>
-                <% for (Voiture voiture : voituresProposees) { %>
-                    <tr>
-                        <td><%= voiture.getId() %></td>
-                        <td><%= voiture.getImmatriculation() %></td>
-                        <td><%= voiture.getNombrePlace() %></td>
-                        <td><%= voiture.getIdConsommation() %></td>
-                        <td><%= voiture.getVitesseMoyenne() %></td>
-                    </tr>
-                <% } %>
-            </table>
-        <% } %>
-
-        <% if (voitureSelectionnee != null && reservationIds != null && !reservationIds.trim().isEmpty()) { %>
-            <form action="${pageContext.request.contextPath}/assignation/method/auto/confirm" method="post">
-                <input type="hidden" name="reservationIds" value="<%= reservationIds %>">
-                <input type="hidden" name="voitureId" value="<%= voitureSelectionnee.getId() %>">
-                <button type="submit">✅ Confirmer l'assignation</button>
-            </form>
         <% } %>
 
         <a class="link" href="${pageContext.request.contextPath}/assignation/method/auto">← Retour formulaire automatique</a>
