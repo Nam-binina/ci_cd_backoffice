@@ -1,0 +1,22 @@
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <span class="footer-brand">© 2026 Reservations</span>
+      <p class="footer-tagline">Votre partenaire de voyage de confiance.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Contacts</h4>
+      <div><strong>Tel :</strong> <a href="tel:+33123456789">+33 1 23 45 67 89</a></div>
+      <div><strong>Email :</strong> <a href="mailto:contact@example.com">contact@example.com</a></div>
+      <div><strong>Adresse :</strong> 12 Rue Exemple, 75000 Paris</div>
+      <div><strong>Horaires :</strong> Lun-Ven 9:00-18:00</div>
+    </div>
+    <div class="footer-col">
+      <h4>Liens</h4>
+      <div><a href="#">Mentions legales</a></div>
+      <div><a href="#">Politique de confidentialite</a></div>
+      <div><a href="#">CGU</a></div>
+      <div><a href="#">FAQ</a></div>
+    </div>
+  </div>
+</footer>

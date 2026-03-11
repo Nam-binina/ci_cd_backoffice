@@ -4,24 +4,17 @@
 <html>
 <head>
     <title>Test Session</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        h1 { color: #333; }
-        .message { color: green; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .form-section { margin: 20px 0; padding: 15px; background-color: #f9f9f9; border-radius: 4px; }
-        input[type="text"] { padding: 8px; margin: 5px; width: 150px; }
-        button { background-color: #4CAF50; color: white; padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; }
-        a { color: #007bff; text-decoration: none; margin-right: 15px; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>Test Session</h1>
+        <h1 class="page-title">Test Session</h1>
         
         <% if (request.getAttribute("message") != null) { %>
             <p class="message">${message}</p>
@@ -76,5 +69,8 @@
         <a href="${pageContext.request.contextPath}/TestClass/login">Test Login/Rôles</a> |
         <a href="${pageContext.request.contextPath}/TestClass/public">Page Publique</a>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

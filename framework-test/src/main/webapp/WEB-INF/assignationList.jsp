@@ -5,18 +5,16 @@
 <html>
 <head>
     <title>Liste des assignations</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .error { color: #c62828; }
-        .link { margin-top: 16px; display: inline-block; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
-    <h1>Liste des assignations</h1>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
+    <h1 class="page-title">Liste des assignations</h1>
 
     <%
         String error = (String) request.getAttribute("error");
@@ -54,5 +52,8 @@
     %>
 
     <a class="link" href="${pageContext.request.contextPath}/assignation/page">← Retour page assignation</a>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

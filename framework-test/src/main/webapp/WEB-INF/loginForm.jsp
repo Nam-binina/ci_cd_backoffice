@@ -3,39 +3,17 @@
 <html>
 <head>
     <title>Connexion</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
-        .container { max-width: 550px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .form-group { margin: 15px 0; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; background-color: #4CAF50; color: white; padding: 12px; border: none; cursor: pointer; border-radius: 4px; font-size: 16px; }
-        button:hover { background-color: #45a049; }
-        .links { margin-top: 20px; text-align: center; }
-        a { color: #007bff; text-decoration: none; margin: 0 10px; }
-        .info-box { background-color: #e7f3ff; border: 1px solid #b3d7ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
-        .info-box h3 { margin-top: 0; color: #0066cc; }
-        .user-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        .user-table th, .user-table td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        .user-table th { background-color: #f0f7ff; }
-        .role-admin { color: #dc3545; font-weight: bold; }
-        .role-manager { color: #fd7e14; font-weight: bold; }
-        .role-user { color: #007bff; font-weight: bold; }
-        .role-guest { color: #6c757d; font-weight: bold; }
-        .error { color: red; padding: 10px; background: #ffe0e0; border-radius: 4px; margin-bottom: 15px; }
-        .message { color: green; padding: 10px; background: #e0ffe0; border-radius: 4px; margin-bottom: 15px; }
-        .quick-login { margin-top: 15px; }
-        .quick-btn { display: inline-block; padding: 6px 12px; margin: 3px; border-radius: 4px; text-decoration: none; font-size: 12px; cursor: pointer; border: none; }
-        .quick-btn.admin { background: #dc3545; color: white; }
-        .quick-btn.manager { background: #fd7e14; color: white; }
-        .quick-btn.user { background: #007bff; color: white; }
-        .quick-btn.guest { background: #6c757d; color: white; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>🔑 Connexion</h1>
+        <h1 class="page-title">🔑 Connexion</h1>
         
         <% if (request.getAttribute("error") != null) { %>
             <div class="error">${error}</div>
@@ -118,5 +96,8 @@
             document.getElementById('loginForm').submit();
         }
     </script>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

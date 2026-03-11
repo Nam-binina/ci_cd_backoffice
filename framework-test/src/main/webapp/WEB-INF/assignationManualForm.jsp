@@ -3,17 +3,22 @@
 <html>
 <head>
     <title>Assignation manuelle</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .link { display: inline-block; margin-top: 16px; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>Formulaire d'assignation manuelle</h1>
+        <h1 class="page-title">Formulaire d'assignation manuelle</h1>
         <p>Contenu à définir.</p>
         <a class="link" href="${pageContext.request.contextPath}/assignation/method">← Retour au choix de méthode</a>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

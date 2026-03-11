@@ -1,0 +1,54 @@
+<header class="site-header">
+  <div class="left">
+    <label class="select-wrap">
+      <select id="section-select" aria-label="Section">
+        <option value="${pageContext.request.contextPath}/" data-match="/">Accueil</option>
+        <option value="${pageContext.request.contextPath}/backoffice" data-match="/backoffice">Backoffice</option>
+        <option value="${pageContext.request.contextPath}/reservation/list" data-match="/reservation">Réservations</option>
+        <option value="${pageContext.request.contextPath}/reservation/form" data-match="/reservation/form">Nouvelle réservation</option>
+        <option value="${pageContext.request.contextPath}/assignation/page" data-match="/assignation">Assignations</option>
+        <option value="${pageContext.request.contextPath}/token/list" data-match="/token">Tokens</option>
+        <option value="${pageContext.request.contextPath}/token/form" data-match="/token/form">Créer un token</option>
+        <option value="${pageContext.request.contextPath}/test-auth.html" data-match="/test-auth.html">Tests auth</option>
+      </select>
+    </label>
+  </div>
+  <div class="center"><img src="${pageContext.request.contextPath}/assets/istockphoto-1036809710-612x612.jpg" alt="Reserve" class="logo"></div>
+  <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="right" id="navRight">
+    <a class="pill small" href="${pageContext.request.contextPath}/backoffice">Home</a>
+    <a class="pill small" href="${pageContext.request.contextPath}/auth/logout">Log out</a>
+  </div>
+</header>
+
+<script>
+  const hamburger = document.getElementById('hamburger');
+  const navRight = document.getElementById('navRight');
+  const sectionSelect = document.getElementById('section-select');
+  if (hamburger && navRight) {
+    hamburger.addEventListener('click', () => {
+      const open = navRight.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', open);
+    });
+  }
+  if (sectionSelect) {
+    sectionSelect.addEventListener('change', (event) => {
+      const value = event.target.value;
+      if (value) {
+        window.location.href = value;
+      }
+    });
+
+    const currentPath = window.location.pathname;
+    const options = Array.from(sectionSelect.options);
+    const match = options.find((opt) => {
+      const matchPath = opt.getAttribute('data-match');
+      return matchPath && currentPath.startsWith(matchPath) && matchPath !== '/';
+    }) || options.find((opt) => opt.getAttribute('data-match') === '/');
+    if (match) {
+      sectionSelect.value = match.value;
+    }
+  }
+</script>

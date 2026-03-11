@@ -8,6 +8,7 @@
 <html>
 <head>
     <title>Réservations par date</title>
+    
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         .container { max-width: 900px; margin: 0 auto; }
@@ -17,10 +18,15 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         .link { display: inline-block; margin-top: 16px; margin-right: 12px; }
     </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>Liste des réservations par date</h1>
+        <h1 class="page-title">Liste des réservations par date</h1>
 
         <%
             List<Reservation> reservationsByDate = (List<Reservation>) request.getAttribute("reservationsByDate");
@@ -151,5 +157,8 @@
         <a class="link" href="${pageContext.request.contextPath}/assignation/method/auto">← Retour formulaire automatique</a>
         <a class="link" href="${pageContext.request.contextPath}/assignation/method">Retour choix de méthode</a>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

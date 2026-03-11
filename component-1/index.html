@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Prototype — Réservation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="left">
+        <label class="select-wrap">
+          <select id="reservation-select" aria-label="Type de réservation">
+            <option value="voiture">Voiture</option>
+            <option value="hotel">Hôtel</option>
+            <option value="aeroport">Aéroport</option>
+          </select>
+        </label>
+      </div>
+      <div class="center"><img src="istockphoto-1036809710-612x612.jpg" alt="Reserve" class="logo"></div>
+      <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="right" id="navRight">
+        <button class="pill small">Home</button>
+        <button class="pill small">Log out<output></output></button>
+      </div>
+    </header>
+
+    <script>
+      const hamburger = document.getElementById('hamburger');
+      const navRight  = document.getElementById('navRight');
+      hamburger.addEventListener('click', () => {
+        const open = navRight.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', open);
+      });
+    </script>
+
+    <main class="hero">
+      <div class="left-card">
+        <!-- image du véhicule : placez une image nommée `vehicle.jpg` dans le dossier -->
+        <img src="2024_lamborghini_revuelto_car_4k_5k_hd_cars.jpg" alt="Véhicule" class="vehicle-img">
+      </div>
+      <aside class="reservation-panel">
+        <h2>Réservation</h2>
+        <div class="reservation-box">
+          <label>Destination</label>
+          <input type="text" placeholder="Où souhaitez-vous aller ?" />
+        </div>
+        <ul class="lines">
+          <li><label>Date de départ</label><input type="date" /></li>
+          <li><label>Date de retour</label><input type="date" /></li>
+          <li><label>Nombre de passagers</label><input type="number" min="1" max="9" placeholder="1" /></li>
+          <li><label>Type de véhicule</label>
+            <select><option>Berline</option><option>SUV</option><option>Coupé</option></select>
+          </li>
+          <li><label>Options</label><input type="text" placeholder="Siège bébé, GPS…" /></li>
+        </ul>
+        <button class="btn-reserve">Réserver maintenant</button>
+      </aside>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <span class="footer-brand">© 2026 Réservations</span>
+          <p class="footer-tagline">Votre partenaire de voyage de confiance.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Contacts</h4>
+          <div><strong>Tél :</strong> <a href="tel:+33123456789">+33 1 23 45 67 89</a></div>
+          <div><strong>Email :</strong> <a href="mailto:contact@example.com">contact@example.com</a></div>
+          <div><strong>Adresse :</strong> 12 Rue Exemple, 75000 Paris</div>
+          <div><strong>Horaires :</strong> Lun–Ven 9:00–18:00</div>
+        </div>
+        <div class="footer-col">
+          <h4>Liens</h4>
+          <div><a href="#">Mentions légales</a></div>
+          <div><a href="#">Politique de confidentialité</a></div>
+          <div><a href="#">CGU</a></div>
+          <div><a href="#">FAQ</a></div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>

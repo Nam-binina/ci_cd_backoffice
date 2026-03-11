@@ -3,22 +3,17 @@
 <html>
 <head>
     <title>Assignation automatique</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 700px; margin: 0 auto; }
-        .field { margin-top: 16px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        input[list] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-        .btn { margin-top: 14px; padding: 10px 16px; border: none; border-radius: 6px; background: #4CAF50; color: white; cursor: pointer; }
-        .btn:hover { background: #45a049; }
-        .error { color: #c62828; margin-top: 10px; }
-        .hint { color: #666; font-size: 14px; margin-top: 6px; }
-        .link { display: inline-block; margin-top: 18px; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>Formulaire d'assignation automatique</h1>
+        <h1 class="page-title">Formulaire d'assignation automatique</h1>
 
         <%
             String error = (String) request.getAttribute("error");
@@ -40,5 +35,8 @@
 
         <a class="link" href="${pageContext.request.contextPath}/assignation/method">← Retour au choix de méthode</a>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>
