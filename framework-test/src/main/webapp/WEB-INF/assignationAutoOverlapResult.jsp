@@ -10,16 +10,8 @@
     <title>Réservations par date</title>
     
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .link { display: inline-block; margin-top: 16px; margin-right: 12px; }
+        <%@ include file="/assets/theme.css" %>
     </style>
-<%@ include file="/assets/theme.css" %>
-</style>
 </head>
 <body>
     <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
