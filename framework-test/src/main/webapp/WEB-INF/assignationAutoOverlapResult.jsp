@@ -10,14 +10,7 @@
 <head>
     <title>Chevauchement automatique</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        .selected { background: #f1f8e9; border: 1px solid #c5e1a5; padding: 12px; border-radius: 6px; margin-bottom: 18px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .link { display: inline-block; margin-top: 16px; margin-right: 12px; }
+        <%@ include file="/assets/theme.css" %>
     </style>
 </head>
 <body>
