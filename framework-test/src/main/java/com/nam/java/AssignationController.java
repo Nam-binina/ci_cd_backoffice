@@ -6,12 +6,28 @@ import java.time.Duration;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 @MyAnnotation(value = "/assignation", method = HttpMethod.CONTROLLER)
 public class AssignationController {
+
+    private static class CandidateSelection {
+        private final int carIndex;
+        private final VehicleAssignmentPlan plan;
+        private final List<Reservation> reservations;
+
+        private CandidateSelection(int carIndex, VehicleAssignmentPlan plan, List<Reservation> reservations) {
+            this.carIndex = carIndex;
+            this.plan = plan;
+            this.reservations = reservations;
+        }
+    }
 
     public static class VehicleAssignmentPlan {
         private final Voiture voiture;
@@ -221,6 +237,8 @@ public class AssignationController {
         List<GroupAssignmentResult> results = new ArrayList<>();
         DistanceRepository distanceRepository = new DistanceRepository();
         AssignationRepository assignationRepository = new AssignationRepository();
+        Map<Integer, LocalDateTime> carNextAvailable = new HashMap<>();
+        Set<Integer> dieselConsommationIds = new VoitureRepository().findDieselConsommationIds();
 
         for (int groupIndex = 0; groupIndex < reservationGroups.size(); groupIndex++) {
             List<Reservation> group = reservationGroups.get(groupIndex);
@@ -242,9 +260,7 @@ public class AssignationController {
 
             while (!sortedReservations.isEmpty()) {
                 Reservation headReservation = sortedReservations.get(0);
-                VehicleAssignmentPlan selectedPlan = null;
-                List<Reservation> selectedReservations = null;
-                int selectedCarIndex = -1;
+                TreeMap<Integer, List<CandidateSelection>> candidatesByCapacity = new TreeMap<>();
 
                 for (int index = 0; index < availableCars.size(); index++) {
                     Voiture candidateCar = availableCars.get(index);
@@ -269,6 +285,10 @@ public class AssignationController {
                             vitesseMoyenne
                     );
 
+                    if (!isCarAvailableBySchedule(candidateCar.getId(), candidatePlan.getDateDepart(), carNextAvailable)) {
+                        continue;
+                    }
+
                     LocalDate debutTrajet = toLocalDate(candidatePlan.getDateDepart());
                     LocalDate finTrajet = toLocalDate(candidatePlan.getDateRetourAeroport());
                     if (finTrajet == null) {
@@ -276,12 +296,16 @@ public class AssignationController {
                     }
 
                     if (assignationRepository.isCarAvailable(candidateCar.getId(), debutTrajet, finTrajet)) {
-                        selectedPlan = candidatePlan;
-                        selectedReservations = candidateReservations;
-                        selectedCarIndex = index;
-                        break;
+                        candidatesByCapacity
+                                .computeIfAbsent(candidateCar.getNombrePlace(), key -> new ArrayList<>())
+                                .add(new CandidateSelection(index, candidatePlan, candidateReservations));
                     }
                 }
+
+                CandidateSelection selected = chooseCandidateByPriority(candidatesByCapacity, dieselConsommationIds);
+                VehicleAssignmentPlan selectedPlan = selected != null ? selected.plan : null;
+                List<Reservation> selectedReservations = selected != null ? selected.reservations : null;
+                int selectedCarIndex = selected != null ? selected.carIndex : -1;
 
                 if (selectedPlan == null || selectedReservations == null || selectedCarIndex < 0) {
                     unassignedReservations.add(headReservation);
@@ -290,6 +314,9 @@ public class AssignationController {
                 }
 
                 plans.add(selectedPlan);
+                if (selectedPlan.getDateRetourAeroport() != null) {
+                    carNextAvailable.put(selectedPlan.getVoiture().getId(), selectedPlan.getDateRetourAeroport());
+                }
                 availableCars.remove(selectedCarIndex);
                 sortedReservations.removeAll(selectedReservations);
             }
@@ -303,6 +330,40 @@ public class AssignationController {
         }
 
         return results;
+    }
+
+    private CandidateSelection chooseCandidateByPriority(
+            TreeMap<Integer, List<CandidateSelection>> candidatesByCapacity,
+            Set<Integer> dieselConsommationIds
+    ) {
+        if (candidatesByCapacity == null || candidatesByCapacity.isEmpty()) {
+            return null;
+        }
+
+        List<CandidateSelection> minimalCapacityCandidates = candidatesByCapacity.firstEntry().getValue();
+        if (minimalCapacityCandidates == null || minimalCapacityCandidates.isEmpty()) {
+            return null;
+        }
+
+        List<CandidateSelection> dieselCandidates = new ArrayList<>();
+        for (CandidateSelection candidate : minimalCapacityCandidates) {
+            int idConsommation = candidate.plan.getVoiture().getIdConsommation();
+            if (dieselConsommationIds.contains(idConsommation)) {
+                dieselCandidates.add(candidate);
+            }
+        }
+
+        List<CandidateSelection> pool = dieselCandidates.isEmpty() ? minimalCapacityCandidates : dieselCandidates;
+        int randomIndex = ThreadLocalRandom.current().nextInt(pool.size());
+        return pool.get(randomIndex);
+    }
+
+    private boolean isCarAvailableBySchedule(int voitureId, LocalDateTime dateDepart, Map<Integer, LocalDateTime> carNextAvailable) {
+        if (dateDepart == null) {
+            return true;
+        }
+        LocalDateTime nextAvailable = carNextAvailable.get(voitureId);
+        return nextAvailable == null || !dateDepart.isBefore(nextAvailable);
     }
 
     private VehicleAssignmentPlan buildVehiclePlan(
@@ -357,7 +418,7 @@ public class AssignationController {
         }
         trajet.append(" -> Aeroport ").append(idAeroport);
 
-        double totalKm = optimalPath.getTotalDistanceKm() * 2.0;
+        double totalKm = optimalPath.getTotalDistanceKm();
         LocalDateTime dateRetour = null;
         if (dateDepart != null && effectiveSpeed > 0.0) {
             long minutes = Math.round((totalKm / effectiveSpeed) * 60.0);

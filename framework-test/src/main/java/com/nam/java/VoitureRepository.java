@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Repository d'accès aux voitures pour proposer un véhicule adapté
@@ -154,5 +156,23 @@ public class VoitureRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors de la sélection de la meilleure voiture", e);
         }
+    }
+
+    public Set<Integer> findDieselConsommationIds() {
+        String sql = "SELECT id FROM consommation WHERE LOWER(description) = 'diesel'";
+        Set<Integer> dieselIds = new HashSet<>();
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                dieselIds.add(rs.getInt("id"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du chargement des consommations Diesel", e);
+        }
+
+        return dieselIds;
     }
 }
