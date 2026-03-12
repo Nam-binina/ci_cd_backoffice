@@ -1,4 +1,4 @@
-CREATE TABLE parametre(
+CREATE TABLE IF NOT EXISTS parametre(
    Id_parametre INT AUTO_INCREMENT,
    vitesse_moyenne DOUBLE NOT NULL,
    temps_attente INT NOT NULL,
