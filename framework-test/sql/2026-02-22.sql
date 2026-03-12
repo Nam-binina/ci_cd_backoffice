@@ -35,7 +35,9 @@ EXECUTE stmt_drop_col;
 DEALLOCATE PREPARE stmt_drop_col;
 
 -- Créer/recréer la table aeroport
+SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS aeroport;
+SET FOREIGN_KEY_CHECKS=1;
 CREATE TABLE aeroport(
    id INT AUTO_INCREMENT,
    nom VARCHAR(100) NOT NULL,
