@@ -27,6 +27,7 @@
                 List<ReservationGroupInfo> reservationGroupsInfo = (List<ReservationGroupInfo>) request.getAttribute("reservationGroupsInfo");
                 List<GroupAssignmentResult> groupAssignmentResults = (List<GroupAssignmentResult>) request.getAttribute("groupAssignmentResults");
                 java.util.Set<Integer> assignedReservationIds = (java.util.Set<Integer>) request.getAttribute("assignedReservationIds");
+                java.util.Map<Integer, Integer> carTripCounts = (java.util.Map<Integer, Integer>) request.getAttribute("carTripCounts");
                 java.time.LocalDate dateSelectionnee = (java.time.LocalDate) request.getAttribute("dateSelectionnee");
                 Integer taMinutes = (Integer) request.getAttribute("taMinutes");
                 Integer totalReservations = (Integer) request.getAttribute("totalReservations");
@@ -129,6 +130,12 @@
                                             <div>
                                                 <strong>Occupé:</strong> <%= plan.getUsedSeats() %>
                                                 | <strong>Reste:</strong> <%= plan.getRemainingSeats() %>
+                                            </div>
+                                            <div>
+                                                <strong>Voyages effectués:</strong>
+                                                <%= carTripCounts != null
+                                                        ? carTripCounts.getOrDefault(plan.getVoiture().getId(), 0)
+                                                        : 0 %>
                                             </div>
                                             <div>
                                                 <strong>Trajet parcouru:</strong>

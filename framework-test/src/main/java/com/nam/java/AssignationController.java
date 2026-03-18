@@ -287,7 +287,8 @@ public class AssignationController {
 
             List<Voiture> allCars = new VoitureRepository().findAllOrderBySeatsAsc();
             double vitesseMoyenne = (currentParametre != null) ? currentParametre.getVitesseMoyenne() : 0.0;
-            List<GroupAssignmentResult> groupAssignmentResults = buildAssignmentsByGroup(reservationGroups, allCars, vitesseMoyenne, taMinutes);
+            Map<Integer, Integer> tripCounts = loadTripCountsForCars(allCars, selectedDate);
+            List<GroupAssignmentResult> groupAssignmentResults = buildAssignmentsByGroup(reservationGroups, allCars, vitesseMoyenne, taMinutes, tripCounts);
 
             int totalPassagers = 0;
             for (Reservation reservation : reservationsByDate) {
@@ -299,6 +300,7 @@ public class AssignationController {
             mv.addItem("reservationGroupsInfo", reservationGroupsInfo);
             mv.addItem("groupAssignmentResults", groupAssignmentResults);
             mv.addItem("assignedReservationIds", new AssignationRepository().findAssignedReservationIds());
+            mv.addItem("carTripCounts", tripCounts);
             mv.addItem("totalReservations", reservationsByDate.size());
             mv.addItem("totalPassagers", totalPassagers);
             mv.addItem("taMinutes", taMinutes);
@@ -341,7 +343,7 @@ public class AssignationController {
         return new ReservationGroupInfo(groupIndex, group, groupStartDate, groupEndDate, totalPassagers, reservationDetails.toString());
     }
 
-    private List<GroupAssignmentResult> buildAssignmentsByGroup(List<List<Reservation>> reservationGroups, List<Voiture> cars, double vitesseMoyenne, int taMinutes) {
+    private List<GroupAssignmentResult> buildAssignmentsByGroup(List<List<Reservation>> reservationGroups, List<Voiture> cars, double vitesseMoyenne, int taMinutes, Map<Integer, Integer> tripCounts) {
         List<GroupAssignmentResult> results = new ArrayList<>();
         DistanceRepository distanceRepository = new DistanceRepository();
         Set<Integer> dieselConsommationIds = new VoitureRepository().findDieselConsommationIds();
@@ -408,7 +410,8 @@ public class AssignationController {
                 int selectedCarIndex = chooseCarIndexByPriority(
                         availableCars,
                         headReservation.getNbrPassager(),
-                        dieselConsommationIds
+            dieselConsommationIds,
+            tripCounts
                 );
 
                 if (selectedCarIndex < 0) {
@@ -436,6 +439,12 @@ public class AssignationController {
                 );
 
                 plans.add(selectedPlan);
+                if (selectedCar != null) {
+                    int currentTrips = tripCounts != null ? tripCounts.getOrDefault(selectedCar.getId(), 0) : 0;
+                    if (tripCounts != null) {
+                        tripCounts.put(selectedCar.getId(), currentTrips + 1);
+                    }
+                }
                 selectedCarReadyTimes.add(carNextAvailable.get(selectedCar.getId()));
                 availableCars.remove(selectedCarIndex);
                 sortedReservations.removeAll(selectedReservations);
@@ -481,15 +490,36 @@ public class AssignationController {
     private int chooseCarIndexByPriority(
             List<Voiture> availableCars,
             int requiredSeats,
-            Set<Integer> dieselConsommationIds
+            Set<Integer> dieselConsommationIds,
+            Map<Integer, Integer> tripCounts
     ) {
         if (availableCars == null || availableCars.isEmpty()) {
+            return -1;
+        }
+        int minTrips = Integer.MAX_VALUE;
+        List<Integer> minTripIndexes = new ArrayList<>();
+        for (int index = 0; index < availableCars.size(); index++) {
+            Voiture car = availableCars.get(index);
+            if (car.getNombrePlace() < requiredSeats) {
+                continue;
+            }
+            int trips = tripCounts != null ? tripCounts.getOrDefault(car.getId(), 0) : 0;
+            if (trips < minTrips) {
+                minTrips = trips;
+                minTripIndexes.clear();
+                minTripIndexes.add(index);
+            } else if (trips == minTrips) {
+                minTripIndexes.add(index);
+            }
+        }
+
+        if (minTripIndexes.isEmpty()) {
             return -1;
         }
 
         int minimalCapacity = Integer.MAX_VALUE;
         List<Integer> minimalCapacityIndexes = new ArrayList<>();
-        for (int index = 0; index < availableCars.size(); index++) {
+        for (int index : minTripIndexes) {
             Voiture car = availableCars.get(index);
             if (car.getNombrePlace() < requiredSeats) {
                 continue;
@@ -519,6 +549,33 @@ public class AssignationController {
         List<Integer> pool = dieselIndexes.isEmpty() ? minimalCapacityIndexes : dieselIndexes;
         int randomIndex = ThreadLocalRandom.current().nextInt(pool.size());
         return pool.get(randomIndex);
+    }
+
+    private Map<Integer, Integer> loadTripCounts(List<Voiture> cars) {
+        List<Integer> carIds = new ArrayList<>();
+        if (cars != null) {
+            for (Voiture car : cars) {
+                if (car != null) {
+                    carIds.add(car.getId());
+                }
+            }
+        }
+        return new AssignationRepository().countTripsByCarIds(carIds);
+    }
+
+    private Map<Integer, Integer> loadTripCountsForCars(List<Voiture> cars, LocalDate date) {
+        List<Integer> carIds = new ArrayList<>();
+        if (cars != null) {
+            for (Voiture car : cars) {
+                if (car != null) {
+                    carIds.add(car.getId());
+                }
+            }
+        }
+        AssignationRepository repository = new AssignationRepository();
+        return date != null
+                ? repository.countTripsByCarIdsForDate(carIds, date)
+                : repository.countTripsByCarIds(carIds);
     }
 
     private VehicleAssignmentPlan buildVehiclePlan(
