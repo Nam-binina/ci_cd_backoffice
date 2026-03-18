@@ -14,10 +14,40 @@ import java.sql.Types;
 public class AssignationRepository {
 
     public void insert(Assignation assignation) {
-        String sql = "INSERT INTO assignation (id_reservation, id_voiture, debut_trajet, fin_trajet) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO assignation (id_reservation, id_voiture, debut_trajet, fin_trajet, distance_totale) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = Connexion.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, assignation.getIdReservation());
+            ps.setInt(2, assignation.getIdVoiture());
+            if (assignation.getDebutTrajet() != null) {
+                ps.setDate(3, Date.valueOf(assignation.getDebutTrajet()));
+            } else {
+                ps.setNull(3, Types.DATE);
+            }
+            if (assignation.getFinTrajet() != null) {
+                ps.setDate(4, Date.valueOf(assignation.getFinTrajet()));
+            } else {
+                ps.setNull(4, Types.DATE);
+            }
+            if (assignation.getDistanceTotale() != null) {
+                ps.setDouble(5, assignation.getDistanceTotale());
+            } else {
+                ps.setNull(5, Types.DOUBLE);
+            }
+            ps.executeUpdate();
+            return;
+        } catch (SQLException e) {
+            if (e.getMessage() == null || !e.getMessage().toLowerCase().contains("distance_totale")) {
+                throw new RuntimeException("Erreur lors de l'insertion de l'assignation : " + e.getMessage(), e);
+            }
+        }
+
+        String fallbackSql = "INSERT INTO assignation (id_reservation, id_voiture, debut_trajet, fin_trajet) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = Connexion.getConnection();
+            PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
 
             ps.setInt(1, assignation.getIdReservation());
             ps.setInt(2, assignation.getIdVoiture());
@@ -38,7 +68,7 @@ public class AssignationRepository {
     }
 
     public List<Assignation> findAll() {
-        String sql = "SELECT id, id_reservation, id_voiture, debut_trajet, fin_trajet FROM assignation ORDER BY id DESC";
+    String sql = "SELECT id, id_reservation, id_voiture, debut_trajet, fin_trajet, distance_totale FROM assignation ORDER BY id DESC";
         List<Assignation> assignations = new ArrayList<>();
 
         try (Connection conn = Connexion.getConnection();
@@ -53,7 +83,8 @@ public class AssignationRepository {
                 Date finTrajetDate = rs.getDate("fin_trajet");
                 LocalDate debutTrajet = (debutTrajetDate != null) ? debutTrajetDate.toLocalDate() : null;
                 LocalDate finTrajet = (finTrajetDate != null) ? finTrajetDate.toLocalDate() : null;
-                assignations.add(new Assignation(id, idReservation, idVoiture, debutTrajet, finTrajet));
+                Double distanceTotale = rs.getObject("distance_totale", Double.class);
+                assignations.add(new Assignation(id, idReservation, idVoiture, debutTrajet, finTrajet, distanceTotale));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des assignations", e);

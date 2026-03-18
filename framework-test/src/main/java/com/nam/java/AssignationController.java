@@ -298,6 +298,7 @@ public class AssignationController {
             mv.addItem("reservationsByDate", reservationsByDate);
             mv.addItem("reservationGroupsInfo", reservationGroupsInfo);
             mv.addItem("groupAssignmentResults", groupAssignmentResults);
+            mv.addItem("assignedReservationIds", new AssignationRepository().findAssignedReservationIds());
             mv.addItem("totalReservations", reservationsByDate.size());
             mv.addItem("totalPassagers", totalPassagers);
             mv.addItem("taMinutes", taMinutes);
@@ -800,18 +801,15 @@ public class AssignationController {
             finTrajet = debutTrajet;
         }
 
-        if (!assignationRepository.isCarAvailable(voitureId, debutTrajet, finTrajet)) {
-            mv.addItem("message", "Voiture indisponible sur la periode demandee.");
-            mv.setJspName("assignationMethodResult");
-            return mv;
-        }
+    Double distanceTotale = plan.getTotalKmTrajet();
 
-        for (Reservation reservation : reservationsToAssign) {
-            assignationRepository.insert(new Assignation(0,
-                    reservation.getIdReservation(),
-                    voitureId,
-                    debutTrajet,
-                    finTrajet));
+    for (Reservation reservation : reservationsToAssign) {
+        assignationRepository.insert(new Assignation(0,
+            reservation.getIdReservation(),
+            voitureId,
+            debutTrajet,
+            finTrajet,
+            distanceTotale));
             inserted++;
         }
 

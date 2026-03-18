@@ -26,6 +26,7 @@
                 List<Reservation> reservationsByDate = (List<Reservation>) request.getAttribute("reservationsByDate");
                 List<ReservationGroupInfo> reservationGroupsInfo = (List<ReservationGroupInfo>) request.getAttribute("reservationGroupsInfo");
                 List<GroupAssignmentResult> groupAssignmentResults = (List<GroupAssignmentResult>) request.getAttribute("groupAssignmentResults");
+                java.util.Set<Integer> assignedReservationIds = (java.util.Set<Integer>) request.getAttribute("assignedReservationIds");
                 java.time.LocalDate dateSelectionnee = (java.time.LocalDate) request.getAttribute("dateSelectionnee");
                 Integer taMinutes = (Integer) request.getAttribute("taMinutes");
                 Integer totalReservations = (Integer) request.getAttribute("totalReservations");
@@ -158,6 +159,34 @@
                                                     </span>
                                                 <% } %>
                                             </div>
+                                            <%
+                                                StringBuilder reservationIds = new StringBuilder();
+                                                boolean allAssigned = true;
+                                                if (plan.getReservations() != null) {
+                                                    for (Reservation reservation : plan.getReservations()) {
+                                                        if (reservationIds.length() > 0) {
+                                                            reservationIds.append(",");
+                                                        }
+                                                        reservationIds.append(reservation.getIdReservation());
+                                                        if (assignedReservationIds == null || !assignedReservationIds.contains(reservation.getIdReservation())) {
+                                                            allAssigned = false;
+                                                        }
+                                                    }
+                                                }
+                                            %>
+                                            <% if (allAssigned) { %>
+                                                <span class="nav-link" style="background:var(--muted); color:white; display:inline-block; margin-top:12px;">
+                                                    ✅ Déjà assigné
+                                                </span>
+                                            <% } else { %>
+                                                <form action="${pageContext.request.contextPath}/assignation/method/auto/confirm" method="POST" class="assignation-confirm-form" style="margin-top:12px;">
+                                                    <input type="hidden" name="reservationIds" value="<%= reservationIds %>">
+                                                    <input type="hidden" name="voitureId" value="<%= plan.getVoiture().getId() %>">
+                                                    <button type="submit" class="nav-link assignation-confirm-btn" style="background:var(--teal); color:white;">
+                                                        ✅ Confirmer assignation
+                                                    </button>
+                                                </form>
+                                            <% } %>
                                         </div>
                                     <% } %>
                                 <% } %>
@@ -251,5 +280,88 @@
     </main>
     
     <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
+
+    <script>
+        (function () {
+            const forms = document.querySelectorAll('.assignation-confirm-form');
+            const initialAssignedIds = <%= assignedReservationIds != null ? assignedReservationIds.toString() : "[]" %>;
+            const assignedIds = new Set(initialAssignedIds);
+
+            const parseReservationIds = (form) => {
+                const input = form.querySelector('input[name="reservationIds"]');
+                if (!input || !input.value) {
+                    return [];
+                }
+                return input.value
+                    .split(',')
+                    .map((value) => Number(value.trim()))
+                    .filter((value) => !Number.isNaN(value));
+            };
+
+            const updateFormState = (form) => {
+                const button = form.querySelector('.assignation-confirm-btn');
+                if (!button) {
+                    return;
+                }
+                const reservationIds = parseReservationIds(form);
+                const allAssigned = reservationIds.length > 0 && reservationIds.every((id) => assignedIds.has(id));
+                if (allAssigned) {
+                    button.textContent = '✅ Déjà assigné';
+                    button.style.background = 'var(--muted)';
+                    button.disabled = true;
+                }
+            };
+            forms.forEach((form) => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    const button = form.querySelector('.assignation-confirm-btn');
+                    if (!button || button.disabled) {
+                        return;
+                    }
+
+                    const ok = window.confirm('Confirmer cette assignation ?');
+                    if (!ok) {
+                        return;
+                    }
+
+                    const formData = new FormData(form);
+                    button.disabled = true;
+                    button.textContent = '⏳ Assignation en cours...';
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Erreur serveur');
+                        }
+
+                        const responseText = await response.text();
+                        const match = responseText.match(/Assignations\s*enregistr[eé]es\s*:\s*(\d+)/i);
+                        const inserted = match ? Number(match[1]) : 0;
+                        const paragraphs = [...responseText.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+                        const lastParagraph = paragraphs.length ? paragraphs[paragraphs.length - 1][1] : '';
+                        const serverMessage = lastParagraph.replace(/<[^>]+>/g, '').trim();
+
+                        if (!inserted) {
+                            throw new Error(serverMessage || 'Aucune assignation enregistrée');
+                        }
+
+                        parseReservationIds(form).forEach((id) => assignedIds.add(id));
+                        updateFormState(form);
+                    } catch (error) {
+                        button.disabled = false;
+                        button.textContent = '✅ Confirmer assignation';
+                        alert(error && error.message ? error.message : "Impossible de confirmer l'assignation pour le moment.");
+                    }
+                });
+
+                updateFormState(form);
+            });
+        })();
+    </script>
 </body>
 </html>
