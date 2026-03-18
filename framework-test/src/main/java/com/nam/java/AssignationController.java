@@ -496,30 +496,9 @@ public class AssignationController {
         if (availableCars == null || availableCars.isEmpty()) {
             return -1;
         }
-        int minTrips = Integer.MAX_VALUE;
-        List<Integer> minTripIndexes = new ArrayList<>();
-        for (int index = 0; index < availableCars.size(); index++) {
-            Voiture car = availableCars.get(index);
-            if (car.getNombrePlace() < requiredSeats) {
-                continue;
-            }
-            int trips = tripCounts != null ? tripCounts.getOrDefault(car.getId(), 0) : 0;
-            if (trips < minTrips) {
-                minTrips = trips;
-                minTripIndexes.clear();
-                minTripIndexes.add(index);
-            } else if (trips == minTrips) {
-                minTripIndexes.add(index);
-            }
-        }
-
-        if (minTripIndexes.isEmpty()) {
-            return -1;
-        }
-
         int minimalCapacity = Integer.MAX_VALUE;
         List<Integer> minimalCapacityIndexes = new ArrayList<>();
-        for (int index : minTripIndexes) {
+        for (int index = 0; index < availableCars.size(); index++) {
             Voiture car = availableCars.get(index);
             if (car.getNombrePlace() < requiredSeats) {
                 continue;
@@ -538,15 +517,33 @@ public class AssignationController {
             return -1;
         }
 
+        int minTrips = Integer.MAX_VALUE;
+        List<Integer> minTripIndexes = new ArrayList<>();
+        for (int index : minimalCapacityIndexes) {
+            Voiture car = availableCars.get(index);
+            int trips = tripCounts != null ? tripCounts.getOrDefault(car.getId(), 0) : 0;
+            if (trips < minTrips) {
+                minTrips = trips;
+                minTripIndexes.clear();
+                minTripIndexes.add(index);
+            } else if (trips == minTrips) {
+                minTripIndexes.add(index);
+            }
+        }
+
+        if (minTripIndexes.isEmpty()) {
+            return -1;
+        }
+
         List<Integer> dieselIndexes = new ArrayList<>();
-        for (Integer candidateIndex : minimalCapacityIndexes) {
+        for (Integer candidateIndex : minTripIndexes) {
             Voiture candidate = availableCars.get(candidateIndex);
             if (dieselConsommationIds.contains(candidate.getIdConsommation())) {
                 dieselIndexes.add(candidateIndex);
             }
         }
 
-        List<Integer> pool = dieselIndexes.isEmpty() ? minimalCapacityIndexes : dieselIndexes;
+        List<Integer> pool = dieselIndexes.isEmpty() ? minTripIndexes : dieselIndexes;
         int randomIndex = ThreadLocalRandom.current().nextInt(pool.size());
         return pool.get(randomIndex);
     }
