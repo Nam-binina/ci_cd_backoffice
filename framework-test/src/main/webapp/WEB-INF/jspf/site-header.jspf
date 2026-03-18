@@ -1,54 +1,139 @@
 <header class="site-header">
-  <div class="left">
-    <label class="select-wrap">
-      <select id="section-select" aria-label="Section">
-        <option value="${pageContext.request.contextPath}/" data-match="/">Accueil</option>
-        <option value="${pageContext.request.contextPath}/backoffice" data-match="/backoffice">Backoffice</option>
-        <option value="${pageContext.request.contextPath}/reservation/list" data-match="/reservation">Réservations</option>
-        <option value="${pageContext.request.contextPath}/reservation/form" data-match="/reservation/form">Nouvelle réservation</option>
-        <option value="${pageContext.request.contextPath}/assignation/page" data-match="/assignation">Assignations</option>
-        <option value="${pageContext.request.contextPath}/token/list" data-match="/token">Tokens</option>
-        <option value="${pageContext.request.contextPath}/token/form" data-match="/token/form">Créer un token</option>
-        <option value="${pageContext.request.contextPath}/test-auth.html" data-match="/test-auth.html">Tests auth</option>
-      </select>
-    </label>
-  </div>
-  <div class="center"><img src="${pageContext.request.contextPath}/assets/istockphoto-1036809710-612x612.jpg" alt="Reserve" class="logo"></div>
-  <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-  <div class="right" id="navRight">
-    <a class="pill small" href="${pageContext.request.contextPath}/backoffice">Home</a>
-    <a class="pill small" href="${pageContext.request.contextPath}/auth/logout">Log out</a>
-  </div>
+    <div class="left">
+        <div class="select-wrap">
+            <select id="section-select" aria-label="Navigation">
+                <option value="${pageContext.request.contextPath}/" data-match="/">
+                    <i class="fas fa-home"></i> Accueil
+                </option>
+                <option value="${pageContext.request.contextPath}/backoffice" data-match="/backoffice">
+                    📊 Backoffice
+                </option>
+                <option value="${pageContext.request.contextPath}/reservation/list" data-match="/reservation">
+                    📋 Réservations
+                </option>
+                <option value="${pageContext.request.contextPath}/reservation/form" data-match="/reservation/form">
+                    ➕ Nouvelle réservation
+                </option>
+                <option value="${pageContext.request.contextPath}/assignation/page" data-match="/assignation">
+                    🚗 Assignations
+                </option>
+                <option value="${pageContext.request.contextPath}/token/list" data-match="/token">
+                    🔑 Tokens
+                </option>
+                <option value="${pageContext.request.contextPath}/token/form" data-match="/token/form">
+                    ✨ Créer token
+                </option>
+                <option value="${pageContext.request.contextPath}/test-auth.html" data-match="/test-auth.html">
+                    🧪 Tests auth
+                </option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="center">
+        <img src="${pageContext.request.contextPath}/assets/istockphoto-1036809710-612x612.jpg" 
+             alt="Reserve" 
+             class="logo">
+    </div>
+    
+    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="right" id="navRight">
+        <a class="pill small" href="${pageContext.request.contextPath}/backoffice">
+            <i class="fas fa-home"></i> Accueil
+        </a>
+        <a class="pill small" href="${pageContext.request.contextPath}/auth/logout">
+            <i class="fas fa-sign-out-alt"></i> Déconnexion
+        </a>
+    </div>
 </header>
 
 <script>
-  const hamburger = document.getElementById('hamburger');
-  const navRight = document.getElementById('navRight');
-  const sectionSelect = document.getElementById('section-select');
-  if (hamburger && navRight) {
-    hamburger.addEventListener('click', () => {
-      const open = navRight.classList.toggle('open');
-      hamburger.setAttribute('aria-expanded', open);
-    });
-  }
-  if (sectionSelect) {
-    sectionSelect.addEventListener('change', (event) => {
-      const value = event.target.value;
-      if (value) {
-        window.location.href = value;
-      }
-    });
+    // Menu hamburger amélioré
+    const hamburger = document.getElementById('hamburger');
+    const navRight = document.getElementById('navRight');
+    const sectionSelect = document.getElementById('section-select');
+    
+    if (hamburger && navRight) {
+        hamburger.addEventListener('click', () => {
+            const open = navRight.classList.toggle('open');
+            hamburger.setAttribute('aria-expanded', open);
+            document.body.classList.toggle('menu-open', open);
+        });
 
-    const currentPath = window.location.pathname;
-    const options = Array.from(sectionSelect.options);
-    const match = options.find((opt) => {
-      const matchPath = opt.getAttribute('data-match');
-      return matchPath && currentPath.startsWith(matchPath) && matchPath !== '/';
-    }) || options.find((opt) => opt.getAttribute('data-match') === '/');
-    if (match) {
-      sectionSelect.value = match.value;
+        // Fermer le menu au clic sur un lien
+        navRight.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navRight.classList.remove('open');
+                hamburger.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('menu-open');
+            });
+        });
     }
-  }
+
+    // Navigation par select améliorée
+    if (sectionSelect) {
+        sectionSelect.addEventListener('change', (event) => {
+            const value = event.target.value;
+            if (value) {
+                // Animation de transition
+                document.body.style.opacity = '0.5';
+                setTimeout(() => {
+                    window.location.href = value;
+                }, 200);
+            }
+        });
+
+        // Sélection automatique basée sur l'URL
+        const currentPath = window.location.pathname;
+        const options = Array.from(sectionSelect.options);
+        
+        // Chercher une correspondance exacte d'abord
+        let match = options.find((opt) => {
+            const matchPath = opt.getAttribute('data-match');
+            return matchPath && currentPath === matchPath;
+        });
+        
+        // Sinon, chercher une correspondance partielle
+        if (!match) {
+            match = options.find((opt) => {
+                const matchPath = opt.getAttribute('data-match');
+                return matchPath && matchPath !== '/' && currentPath.startsWith(matchPath);
+            });
+        }
+        
+        // Sinon, prendre l'accueil
+        if (!match) {
+            match = options.find((opt) => opt.getAttribute('data-match') === '/');
+        }
+        
+        if (match) {
+            sectionSelect.value = match.value;
+        }
+
+        // Animation au focus
+        sectionSelect.addEventListener('focus', () => {
+            sectionSelect.parentElement.style.transform = 'scale(1.02)';
+        });
+
+        sectionSelect.addEventListener('blur', () => {
+            sectionSelect.parentElement.style.transform = 'scale(1)';
+        });
+    }
+
+    // Détecter le scroll pour l'effet sticky
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('.site-header');
+        if (window.scrollY > 10) {
+            header.style.backdropFilter = 'blur(15px)';
+            header.style.background = 'linear-gradient(135deg, rgba(61,48,40,0.95) 0%, rgba(74,58,48,0.95) 100%)';
+        } else {
+            header.style.backdropFilter = 'blur(10px)';
+            header.style.background = 'linear-gradient(135deg, var(--brown) 0%, #4a3a30 100%)';
+        }
+    });
 </script>

@@ -11,21 +11,55 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 @MyAnnotation(value = "/assignation", method = HttpMethod.CONTROLLER)
 public class AssignationController {
 
-    private static class CandidateSelection {
-        private final int carIndex;
-        private final VehicleAssignmentPlan plan;
+    public static class ReservationGroupInfo {
+        private final int groupIndex;
         private final List<Reservation> reservations;
+        private final LocalDateTime groupStartDate;
+        private final LocalDateTime groupEndDate;
+        private final int totalPassagers;
+        private final String reservationDetails;
 
-        private CandidateSelection(int carIndex, VehicleAssignmentPlan plan, List<Reservation> reservations) {
-            this.carIndex = carIndex;
-            this.plan = plan;
+        public ReservationGroupInfo(int groupIndex,
+                                    List<Reservation> reservations,
+                                    LocalDateTime groupStartDate,
+                                    LocalDateTime groupEndDate,
+                                    int totalPassagers,
+                                    String reservationDetails) {
+            this.groupIndex = groupIndex;
             this.reservations = reservations;
+            this.groupStartDate = groupStartDate;
+            this.groupEndDate = groupEndDate;
+            this.totalPassagers = totalPassagers;
+            this.reservationDetails = reservationDetails;
+        }
+
+        public int getGroupIndex() {
+            return groupIndex;
+        }
+
+        public List<Reservation> getReservations() {
+            return reservations;
+        }
+
+        public LocalDateTime getGroupStartDate() {
+            return groupStartDate;
+        }
+
+        public LocalDateTime getGroupEndDate() {
+            return groupEndDate;
+        }
+
+        public int getTotalPassagers() {
+            return totalPassagers;
+        }
+
+        public String getReservationDetails() {
+            return reservationDetails;
         }
     }
 
@@ -100,17 +134,23 @@ public class AssignationController {
     public static class GroupAssignmentResult {
         private final int groupIndex;
         private final List<Integer> reservationIds;
+        private final List<Integer> carriedOverReservationIds;
         private final List<VehicleAssignmentPlan> plans;
         private final List<Reservation> unassignedReservations;
+        private final LocalDateTime groupDeparture;
 
         public GroupAssignmentResult(int groupIndex,
                                      List<Integer> reservationIds,
+                                     List<Integer> carriedOverReservationIds,
                                      List<VehicleAssignmentPlan> plans,
-                                     List<Reservation> unassignedReservations) {
+                                     List<Reservation> unassignedReservations,
+                                     LocalDateTime groupDeparture) {
             this.groupIndex = groupIndex;
             this.reservationIds = reservationIds;
+            this.carriedOverReservationIds = carriedOverReservationIds;
             this.plans = plans;
             this.unassignedReservations = unassignedReservations;
+            this.groupDeparture = groupDeparture;
         }
 
         public int getGroupIndex() {
@@ -121,12 +161,20 @@ public class AssignationController {
             return reservationIds;
         }
 
+        public List<Integer> getCarriedOverReservationIds() {
+            return carriedOverReservationIds;
+        }
+
         public List<VehicleAssignmentPlan> getPlans() {
             return plans;
         }
 
         public List<Reservation> getUnassignedReservations() {
             return unassignedReservations;
+        }
+
+        public LocalDateTime getGroupDeparture() {
+            return groupDeparture;
         }
     }
 
@@ -172,6 +220,7 @@ public class AssignationController {
             LocalDate selectedDate = LocalDate.parse(date.trim());
             ReservationRepository reservationRepository = new ReservationRepository();
 
+            // Étape 1: Sélectionner toutes les réservations pour la date choisie
             List<Reservation> reservationsByDate = reservationRepository.findByDate(selectedDate);
             if (reservationsByDate == null || reservationsByDate.isEmpty()) {
                 mv.addItem("modeChoisi", "Automatique");
@@ -180,12 +229,19 @@ public class AssignationController {
                 return mv;
             }
 
+            // Récupérer le TA depuis les paramètres
             Parametre currentParametre = new ParametreRepository().getCurrent();
             int taMinutes = 15;
             if (currentParametre != null && currentParametre.getTempsAttente() > 0) {
                 taMinutes = currentParametre.getTempsAttente();
             }
 
+            // Étape 2: Grouper les réservations par rapport au TA
+            // Trier d'abord par date d'arrivée
+            reservationsByDate.sort(Comparator.comparing(r -> r.getDateArriver() != null ? r.getDateArriver() : LocalDateTime.MIN));
+
+            // Étape 2: Grouper les réservations par rapport au TA avec calculs pré-effectués
+            java.util.List<ReservationGroupInfo> reservationGroupsInfo = new java.util.ArrayList<>();
             java.util.List<java.util.List<Reservation>> reservationGroups = new java.util.ArrayList<>();
             java.util.List<Reservation> currentGroup = new java.util.ArrayList<>();
             LocalDateTime groupStartDate = null;
@@ -194,33 +250,56 @@ public class AssignationController {
                 LocalDateTime currentDate = reservation.getDateArriver();
 
                 if (currentGroup.isEmpty()) {
+                    // Début d'un nouveau groupe
                     currentGroup.add(reservation);
                     groupStartDate = currentDate;
                     continue;
                 }
 
+                // Vérifier si la réservation appartient au groupe courant
                 if (groupStartDate != null && currentDate != null
                         && Duration.between(groupStartDate, currentDate).toMinutes() <= taMinutes) {
                     currentGroup.add(reservation);
                 } else {
-                    reservationGroups.add(currentGroup);
+                    // Créer les infos du groupe et l'ajouter
+                    reservationGroups.add(new java.util.ArrayList<>(currentGroup));
+                    ReservationGroupInfo groupInfo = buildGroupInfo(reservationGroupsInfo.size() + 1, 
+                                                                     currentGroup, 
+                                                                     groupStartDate, 
+                                                                     taMinutes);
+                    reservationGroupsInfo.add(groupInfo);
+                    
                     currentGroup = new java.util.ArrayList<>();
                     currentGroup.add(reservation);
                     groupStartDate = currentDate;
                 }
             }
 
+            // Ajouter le dernier groupe
             if (!currentGroup.isEmpty()) {
-                reservationGroups.add(currentGroup);
+                reservationGroups.add(new java.util.ArrayList<>(currentGroup));
+                ReservationGroupInfo groupInfo = buildGroupInfo(reservationGroupsInfo.size() + 1, 
+                                                                 currentGroup, 
+                                                                 groupStartDate, 
+                                                                 taMinutes);
+                reservationGroupsInfo.add(groupInfo);
             }
 
             List<Voiture> allCars = new VoitureRepository().findAllOrderBySeatsAsc();
             double vitesseMoyenne = (currentParametre != null) ? currentParametre.getVitesseMoyenne() : 0.0;
-            List<GroupAssignmentResult> groupAssignmentResults = buildAssignmentsByGroup(reservationGroups, allCars, vitesseMoyenne);
+            List<GroupAssignmentResult> groupAssignmentResults = buildAssignmentsByGroup(reservationGroups, allCars, vitesseMoyenne, taMinutes);
 
+            int totalPassagers = 0;
+            for (Reservation reservation : reservationsByDate) {
+                totalPassagers += reservation.getNbrPassager();
+            }
+
+            // Envoyer les données à la vue
             mv.addItem("reservationsByDate", reservationsByDate);
-            mv.addItem("reservationGroups", reservationGroups);
+            mv.addItem("reservationGroupsInfo", reservationGroupsInfo);
             mv.addItem("groupAssignmentResults", groupAssignmentResults);
+            mv.addItem("totalReservations", reservationsByDate.size());
+            mv.addItem("totalPassagers", totalPassagers);
             mv.addItem("taMinutes", taMinutes);
             mv.addItem("dateSelectionnee", selectedDate);
             mv.setJspName("assignationAutoOverlapResult");
@@ -233,137 +312,212 @@ public class AssignationController {
         return mv;
     }
 
-    private List<GroupAssignmentResult> buildAssignmentsByGroup(List<List<Reservation>> reservationGroups, List<Voiture> cars, double vitesseMoyenne) {
+    private ReservationGroupInfo buildGroupInfo(int groupIndex, List<Reservation> group, LocalDateTime groupStartDate, int taMinutes) {
+        // Calculer la date de fin du groupe
+        LocalDateTime groupEndDate = groupStartDate != null ? groupStartDate.plusMinutes(taMinutes) : null;
+        
+        // Calculer le total des passagers
+        int totalPassagers = 0;
+        for (Reservation reservation : group) {
+            totalPassagers += reservation.getNbrPassager();
+        }
+        
+        // Construire les détails des réservations
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        StringBuilder reservationDetails = new StringBuilder();
+        for (Reservation reservation : group) {
+            if (reservationDetails.length() > 0) {
+                reservationDetails.append(", ");
+            }
+            String reservationDate = (reservation.getDateArriver() != null)
+                    ? reservation.getDateArriver().format(formatter)
+                    : "-";
+            reservationDetails.append("ID ")
+                    .append(reservation.getIdReservation())
+                    .append(" (").append(reservationDate).append(")");
+        }
+        
+        return new ReservationGroupInfo(groupIndex, group, groupStartDate, groupEndDate, totalPassagers, reservationDetails.toString());
+    }
+
+    private List<GroupAssignmentResult> buildAssignmentsByGroup(List<List<Reservation>> reservationGroups, List<Voiture> cars, double vitesseMoyenne, int taMinutes) {
         List<GroupAssignmentResult> results = new ArrayList<>();
         DistanceRepository distanceRepository = new DistanceRepository();
-        AssignationRepository assignationRepository = new AssignationRepository();
-        Map<Integer, LocalDateTime> carNextAvailable = new HashMap<>();
         Set<Integer> dieselConsommationIds = new VoitureRepository().findDieselConsommationIds();
+        Map<Integer, LocalDateTime> carNextAvailable = new HashMap<>();
+        List<Reservation> carryOverReservations = new ArrayList<>();
 
         for (int groupIndex = 0; groupIndex < reservationGroups.size(); groupIndex++) {
             List<Reservation> group = reservationGroups.get(groupIndex);
+            LocalDateTime groupStart = group != null && !group.isEmpty() ? group.get(0).getDateArriver() : null;
+            LocalDateTime groupEnd = groupStart != null ? groupStart.plusMinutes(taMinutes) : null;
+            List<Integer> carriedOverReservationIds = new ArrayList<>();
+            for (Reservation reservation : carryOverReservations) {
+                if (reservation != null) {
+                    carriedOverReservationIds.add(reservation.getIdReservation());
+                }
+            }
+
+            List<Reservation> processingReservations = new ArrayList<>();
+            Set<Integer> seenReservationIds = new LinkedHashSet<>();
+
+            for (Reservation reservation : carryOverReservations) {
+                if (reservation != null && seenReservationIds.add(reservation.getIdReservation())) {
+                    processingReservations.add(reservation);
+                }
+            }
+            if (group != null) {
+                for (Reservation reservation : group) {
+                    if (reservation != null && seenReservationIds.add(reservation.getIdReservation())) {
+                        processingReservations.add(reservation);
+                    }
+                }
+            }
 
             List<Integer> reservationIds = new ArrayList<>();
-            for (Reservation reservation : group) {
+            for (Reservation reservation : processingReservations) {
                 reservationIds.add(reservation.getIdReservation());
             }
 
-            List<Reservation> sortedReservations = new ArrayList<>(group);
+            List<Reservation> sortedReservations = new ArrayList<>(processingReservations);
             sortedReservations.sort(Comparator
                     .comparingInt(Reservation::getNbrPassager)
                     .reversed()
                     .thenComparingInt(Reservation::getIdReservation));
 
             List<Voiture> availableCars = new ArrayList<>(cars);
+            availableCars.sort(Comparator
+                    .comparingInt(Voiture::getNombrePlace)
+                    .reversed()
+                    .thenComparingInt(Voiture::getId));
+            List<Voiture> candidateCarsForGroup = new ArrayList<>();
+            for (Voiture car : availableCars) {
+                if (isCarCandidateForGroup(car.getId(), carNextAvailable, groupEnd)) {
+                    candidateCarsForGroup.add(car);
+                }
+            }
+            availableCars = candidateCarsForGroup;
+
             List<VehicleAssignmentPlan> plans = new ArrayList<>();
             List<Reservation> unassignedReservations = new ArrayList<>();
+            List<LocalDateTime> selectedCarReadyTimes = new ArrayList<>();
 
             while (!sortedReservations.isEmpty()) {
                 Reservation headReservation = sortedReservations.get(0);
-                TreeMap<Integer, List<CandidateSelection>> candidatesByCapacity = new TreeMap<>();
+                int selectedCarIndex = chooseCarIndexByPriority(
+                        availableCars,
+                        headReservation.getNbrPassager(),
+                        dieselConsommationIds
+                );
 
-                for (int index = 0; index < availableCars.size(); index++) {
-                    Voiture candidateCar = availableCars.get(index);
-                    if (candidateCar.getNombrePlace() < headReservation.getNbrPassager()) {
-                        continue;
-                    }
-
-                    List<Reservation> candidateReservations = buildReservationsForCar(
-                            sortedReservations,
-                            headReservation,
-                            candidateCar.getNombrePlace()
-                    );
-                    int usedSeats = countPassengers(candidateReservations);
-                    int remainingSeats = candidateCar.getNombrePlace() - usedSeats;
-
-                    VehicleAssignmentPlan candidatePlan = buildVehiclePlan(
-                            distanceRepository,
-                            candidateCar,
-                            candidateReservations,
-                            usedSeats,
-                            remainingSeats,
-                            vitesseMoyenne
-                    );
-
-                    if (!isCarAvailableBySchedule(candidateCar.getId(), candidatePlan.getDateDepart(), carNextAvailable)) {
-                        continue;
-                    }
-
-                    LocalDate debutTrajet = toLocalDate(candidatePlan.getDateDepart());
-                    LocalDate finTrajet = toLocalDate(candidatePlan.getDateRetourAeroport());
-                    if (finTrajet == null) {
-                        finTrajet = debutTrajet;
-                    }
-
-                    if (assignationRepository.isCarAvailable(candidateCar.getId(), debutTrajet, finTrajet)) {
-                        candidatesByCapacity
-                                .computeIfAbsent(candidateCar.getNombrePlace(), key -> new ArrayList<>())
-                                .add(new CandidateSelection(index, candidatePlan, candidateReservations));
-                    }
-                }
-
-                CandidateSelection selected = chooseCandidateByPriority(candidatesByCapacity, dieselConsommationIds);
-                VehicleAssignmentPlan selectedPlan = selected != null ? selected.plan : null;
-                List<Reservation> selectedReservations = selected != null ? selected.reservations : null;
-                int selectedCarIndex = selected != null ? selected.carIndex : -1;
-
-                if (selectedPlan == null || selectedReservations == null || selectedCarIndex < 0) {
+                if (selectedCarIndex < 0) {
                     unassignedReservations.add(headReservation);
                     sortedReservations.remove(0);
                     continue;
                 }
 
+                Voiture selectedCar = availableCars.get(selectedCarIndex);
+                List<Reservation> selectedReservations = buildReservationsForCar(
+                        sortedReservations,
+                        headReservation,
+                        selectedCar.getNombrePlace()
+                );
+                int usedSeats = countPassengers(selectedReservations);
+                int remainingSeats = selectedCar.getNombrePlace() - usedSeats;
+
+                VehicleAssignmentPlan selectedPlan = buildVehiclePlan(
+                        distanceRepository,
+                        selectedCar,
+                        selectedReservations,
+                        usedSeats,
+                        remainingSeats,
+                        vitesseMoyenne
+                );
+
                 plans.add(selectedPlan);
-                if (selectedPlan.getDateRetourAeroport() != null) {
-                    carNextAvailable.put(selectedPlan.getVoiture().getId(), selectedPlan.getDateRetourAeroport());
-                }
+                selectedCarReadyTimes.add(carNextAvailable.get(selectedCar.getId()));
                 availableCars.remove(selectedCarIndex);
                 sortedReservations.removeAll(selectedReservations);
             }
 
+            LocalDateTime groupDeparture = findGroupDepartureFromPlans(plans, selectedCarReadyTimes);
+            plans = applyGroupDepartureToPlans(plans, groupDeparture);
+
+            for (VehicleAssignmentPlan plan : plans) {
+                if (plan.getDateRetourAeroport() != null) {
+                    carNextAvailable.put(plan.getVoiture().getId(), plan.getDateRetourAeroport());
+                } else if (groupDeparture != null) {
+                    carNextAvailable.put(plan.getVoiture().getId(), groupDeparture);
+                }
+            }
+
+            carryOverReservations = new ArrayList<>(unassignedReservations);
+
             results.add(new GroupAssignmentResult(
                     groupIndex + 1,
                     reservationIds,
+                    carriedOverReservationIds,
                     plans,
-                    unassignedReservations
+                    unassignedReservations,
+                    groupDeparture
             ));
         }
 
         return results;
     }
 
-    private CandidateSelection chooseCandidateByPriority(
-            TreeMap<Integer, List<CandidateSelection>> candidatesByCapacity,
+    private boolean isCarCandidateForGroup(int carId, Map<Integer, LocalDateTime> carNextAvailable, LocalDateTime groupEnd) {
+        LocalDateTime readyAt = carNextAvailable.get(carId);
+        if (readyAt == null) {
+            return true;
+        }
+        if (groupEnd == null) {
+            return true;
+        }
+        return !readyAt.isAfter(groupEnd);
+    }
+
+    private int chooseCarIndexByPriority(
+            List<Voiture> availableCars,
+            int requiredSeats,
             Set<Integer> dieselConsommationIds
     ) {
-        if (candidatesByCapacity == null || candidatesByCapacity.isEmpty()) {
-            return null;
+        if (availableCars == null || availableCars.isEmpty()) {
+            return -1;
         }
 
-        List<CandidateSelection> minimalCapacityCandidates = candidatesByCapacity.firstEntry().getValue();
-        if (minimalCapacityCandidates == null || minimalCapacityCandidates.isEmpty()) {
-            return null;
-        }
+        int minimalCapacity = Integer.MAX_VALUE;
+        List<Integer> minimalCapacityIndexes = new ArrayList<>();
+        for (int index = 0; index < availableCars.size(); index++) {
+            Voiture car = availableCars.get(index);
+            if (car.getNombrePlace() < requiredSeats) {
+                continue;
+            }
 
-        List<CandidateSelection> dieselCandidates = new ArrayList<>();
-        for (CandidateSelection candidate : minimalCapacityCandidates) {
-            int idConsommation = candidate.plan.getVoiture().getIdConsommation();
-            if (dieselConsommationIds.contains(idConsommation)) {
-                dieselCandidates.add(candidate);
+            if (car.getNombrePlace() < minimalCapacity) {
+                minimalCapacity = car.getNombrePlace();
+                minimalCapacityIndexes.clear();
+                minimalCapacityIndexes.add(index);
+            } else if (car.getNombrePlace() == minimalCapacity) {
+                minimalCapacityIndexes.add(index);
             }
         }
 
-        List<CandidateSelection> pool = dieselCandidates.isEmpty() ? minimalCapacityCandidates : dieselCandidates;
+        if (minimalCapacityIndexes.isEmpty()) {
+            return -1;
+        }
+
+        List<Integer> dieselIndexes = new ArrayList<>();
+        for (Integer candidateIndex : minimalCapacityIndexes) {
+            Voiture candidate = availableCars.get(candidateIndex);
+            if (dieselConsommationIds.contains(candidate.getIdConsommation())) {
+                dieselIndexes.add(candidateIndex);
+            }
+        }
+
+        List<Integer> pool = dieselIndexes.isEmpty() ? minimalCapacityIndexes : dieselIndexes;
         int randomIndex = ThreadLocalRandom.current().nextInt(pool.size());
         return pool.get(randomIndex);
-    }
-
-    private boolean isCarAvailableBySchedule(int voitureId, LocalDateTime dateDepart, Map<Integer, LocalDateTime> carNextAvailable) {
-        if (dateDepart == null) {
-            return true;
-        }
-        LocalDateTime nextAvailable = carNextAvailable.get(voitureId);
-        return nextAvailable == null || !dateDepart.isBefore(nextAvailable);
     }
 
     private VehicleAssignmentPlan buildVehiclePlan(
@@ -436,6 +590,73 @@ public class AssignationController {
                 effectiveSpeed,
                 dateRetour
         );
+    }
+
+    private LocalDateTime findGroupDepartureFromPlans(List<VehicleAssignmentPlan> plans, List<LocalDateTime> selectedCarReadyTimes) {
+        LocalDateTime latestAssignedArrival = null;
+        if (plans == null) {
+            return null;
+        }
+
+        for (VehicleAssignmentPlan plan : plans) {
+            if (plan == null || plan.getReservations() == null) {
+                continue;
+            }
+            LocalDateTime latestPlanArrival = findLatestArrival(plan.getReservations());
+            if (latestPlanArrival != null && (latestAssignedArrival == null || latestPlanArrival.isAfter(latestAssignedArrival))) {
+                latestAssignedArrival = latestPlanArrival;
+            }
+        }
+
+        LocalDateTime latestSelectedCarReady = null;
+        if (selectedCarReadyTimes != null) {
+            for (LocalDateTime readyAt : selectedCarReadyTimes) {
+                if (readyAt != null && (latestSelectedCarReady == null || readyAt.isAfter(latestSelectedCarReady))) {
+                    latestSelectedCarReady = readyAt;
+                }
+            }
+        }
+
+        if (latestAssignedArrival == null) {
+            return latestSelectedCarReady;
+        }
+        if (latestSelectedCarReady == null) {
+            return latestAssignedArrival;
+        }
+        return latestAssignedArrival.isAfter(latestSelectedCarReady) ? latestAssignedArrival : latestSelectedCarReady;
+    }
+
+    private List<VehicleAssignmentPlan> applyGroupDepartureToPlans(List<VehicleAssignmentPlan> plans, LocalDateTime groupDeparture) {
+        List<VehicleAssignmentPlan> normalizedPlans = new ArrayList<>();
+        if (plans == null) {
+            return normalizedPlans;
+        }
+
+        for (VehicleAssignmentPlan plan : plans) {
+            if (plan == null) {
+                continue;
+            }
+
+            LocalDateTime dateRetour = null;
+            if (groupDeparture != null && plan.getTotalKmTrajet() != null && plan.getVitesseMoyenne() != null && plan.getVitesseMoyenne() > 0.0) {
+                long minutes = Math.round((plan.getTotalKmTrajet() / plan.getVitesseMoyenne()) * 60.0);
+                dateRetour = groupDeparture.plusMinutes(minutes);
+            }
+
+            normalizedPlans.add(new VehicleAssignmentPlan(
+                    plan.getVoiture(),
+                    plan.getReservations(),
+                    plan.getUsedSeats(),
+                    plan.getRemainingSeats(),
+                    groupDeparture,
+                    plan.getTrajetOptimum(),
+                    plan.getTotalKmTrajet(),
+                    plan.getVitesseMoyenne(),
+                    dateRetour
+            ));
+        }
+
+        return normalizedPlans;
     }
 
     private List<Reservation> buildReservationsForCar(
