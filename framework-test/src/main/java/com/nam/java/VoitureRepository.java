@@ -42,6 +42,32 @@ public class VoitureRepository {
         return voitures;
     }
 
+    public Voiture findById(int id) {
+        String sql = "SELECT id, immatriculation, nombre_place, id_consommation " +
+                "FROM voiture " +
+                "WHERE id = ?";
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                return new Voiture(
+                        rs.getInt("id"),
+                        rs.getString("immatriculation"),
+                        rs.getInt("nombre_place"),
+                        rs.getInt("id_consommation"),
+                        0
+                );
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du chargement de la voiture", e);
+        }
+    }
+
     /**
      * Retourne toutes les voitures ayant la capacité minimale suffisante.
      *

@@ -177,8 +177,15 @@ public class DistanceRepository {
             Map<String, Double> hotelHotelCache
     ) {
         if (currentPath.size() == hotelsToVisit.size()) {
-            if (currentDistance < bestDistance[0]) {
-                bestDistance[0] = currentDistance;
+            int lastHotelId = currentPath.get(currentPath.size() - 1);
+            Double backToAirportDistance = getAirportHotelDistanceCached(idAvion, lastHotelId, airportHotelCache);
+            if (backToAirportDistance == null) {
+                return;
+            }
+
+            double totalDistanceWithReturn = currentDistance + backToAirportDistance;
+            if (totalDistanceWithReturn < bestDistance[0]) {
+                bestDistance[0] = totalDistanceWithReturn;
                 bestPath[0] = new ArrayList<>(currentPath);
             }
             return;
