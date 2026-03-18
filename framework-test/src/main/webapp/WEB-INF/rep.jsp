@@ -3,8 +3,14 @@ import="com.nam.java.Etudiant" %>
 <html>
   <head>
     <title>Étudiant</title>
-  </head>
+      <style>
+<%@ include file="/assets/theme.css" %>
+</style>
+</head>
   <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <h2>Sprint 6</h2>
 
     <% Etudiant etudiant = (Etudiant) request.getAttribute("etudiant"); if
@@ -14,5 +20,8 @@ import="com.nam.java.Etudiant" %>
     <% } else { %>
     <p>Aucun étudiant trouvé.</p>
     <% } %>
-  </body>
+          </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
+</body>
 </html>

@@ -3,22 +3,17 @@
 <html>
 <head>
     <title>Page Protégée</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
-        .container { max-width: 500px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .message { font-size: 18px; text-align: center; padding: 20px; background-color: #d4edda; border-radius: 4px; color: #155724; }
-        .info { margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 4px; text-align: center; }
-        .links { margin-top: 20px; text-align: center; }
-        a { color: #007bff; text-decoration: none; margin: 0 10px; }
-        .btn { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin: 5px; }
-        .btn:hover { background-color: #0056b3; }
-        .role-badge { display: inline-block; padding: 5px 15px; background-color: #28a745; color: white; border-radius: 20px; font-weight: bold; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>🔒 Page Protégée</h1>
+        <h1 class="page-title">🔒 Page Protégée</h1>
         
         <p class="message">${message}</p>
         
@@ -47,5 +42,8 @@
             <a href="${pageContext.request.contextPath}/test-auth.html">🏠 Page de test principale</a>
         </div>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

@@ -1,0 +1,295 @@
+-- MariaDB dump 10.19  Distrib 10.4.25-MariaDB, for Linux (x86_64)
+--
+-- Host: localhost    Database: ci_cd
+-- ------------------------------------------------------
+-- Server version	10.4.25-MariaDB
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `aeroport`
+--
+
+DROP TABLE IF EXISTS `aeroport`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `aeroport` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nom` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `aeroport`
+--
+
+LOCK TABLES `aeroport` WRITE;
+/*!40000 ALTER TABLE `aeroport` DISABLE KEYS */;
+/*!40000 ALTER TABLE `aeroport` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `assignation`
+--
+
+DROP TABLE IF EXISTS `assignation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `assignation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_reservation` int(11) NOT NULL,
+  `id_voiture` int(11) NOT NULL,
+  `debut_trajet` date DEFAULT NULL,
+  `fin_trajet` date DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_assignation_reservation` (`id_reservation`),
+  KEY `fk_assignation_voiture` (`id_voiture`),
+  CONSTRAINT `fk_assignation_reservation` FOREIGN KEY (`id_reservation`) REFERENCES `reservation` (`Id_reservation`),
+  CONSTRAINT `fk_assignation_voiture` FOREIGN KEY (`id_voiture`) REFERENCES `voiture` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `assignation`
+--
+
+LOCK TABLES `assignation` WRITE;
+/*!40000 ALTER TABLE `assignation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `assignation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `consommation`
+--
+
+DROP TABLE IF EXISTS `consommation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `consommation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `description` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `consommation`
+--
+
+LOCK TABLES `consommation` WRITE;
+/*!40000 ALTER TABLE `consommation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `consommation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hotel`
+--
+
+DROP TABLE IF EXISTS `hotel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hotel` (
+  `Id_hotel` int(11) NOT NULL AUTO_INCREMENT,
+  `nom` varchar(50) NOT NULL,
+  `id_aeroport` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_hotel`),
+  KEY `fk_hotel_aeroport` (`id_aeroport`),
+  CONSTRAINT `fk_hotel_aeroport` FOREIGN KEY (`id_aeroport`) REFERENCES `aeroport` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hotel`
+--
+
+LOCK TABLES `hotel` WRITE;
+/*!40000 ALTER TABLE `hotel` DISABLE KEYS */;
+/*!40000 ALTER TABLE `hotel` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hotel_aeroport_distance`
+--
+
+DROP TABLE IF EXISTS `hotel_aeroport_distance`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hotel_aeroport_distance` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_hotel` int(11) NOT NULL,
+  `id_aeroport` int(11) NOT NULL,
+  `km` decimal(8,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_had_pair` (`id_hotel`,`id_aeroport`),
+  KEY `fk_had_aeroport` (`id_aeroport`),
+  CONSTRAINT `fk_had_aeroport` FOREIGN KEY (`id_aeroport`) REFERENCES `aeroport` (`id`),
+  CONSTRAINT `fk_had_hotel` FOREIGN KEY (`id_hotel`) REFERENCES `hotel` (`Id_hotel`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hotel_aeroport_distance`
+--
+
+LOCK TABLES `hotel_aeroport_distance` WRITE;
+/*!40000 ALTER TABLE `hotel_aeroport_distance` DISABLE KEYS */;
+/*!40000 ALTER TABLE `hotel_aeroport_distance` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hotel_hotel_distance`
+--
+
+DROP TABLE IF EXISTS `hotel_hotel_distance`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hotel_hotel_distance` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `from_hotel_id` int(11) NOT NULL,
+  `to_hotel_id` int(11) NOT NULL,
+  `km` decimal(8,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_distance_pair` (`from_hotel_id`,`to_hotel_id`),
+  KEY `fk_distance_to_hotel` (`to_hotel_id`),
+  CONSTRAINT `fk_distance_from_hotel` FOREIGN KEY (`from_hotel_id`) REFERENCES `hotel` (`Id_hotel`),
+  CONSTRAINT `fk_distance_to_hotel` FOREIGN KEY (`to_hotel_id`) REFERENCES `hotel` (`Id_hotel`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hotel_hotel_distance`
+--
+
+LOCK TABLES `hotel_hotel_distance` WRITE;
+/*!40000 ALTER TABLE `hotel_hotel_distance` DISABLE KEYS */;
+/*!40000 ALTER TABLE `hotel_hotel_distance` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `parametre`
+--
+
+DROP TABLE IF EXISTS `parametre`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `parametre` (
+  `Id_parametre` int(11) NOT NULL AUTO_INCREMENT,
+  `vitesse_moyenne` double NOT NULL,
+  `temps_attente` int(11) NOT NULL,
+  PRIMARY KEY (`Id_parametre`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `parametre`
+--
+
+LOCK TABLES `parametre` WRITE;
+/*!40000 ALTER TABLE `parametre` DISABLE KEYS */;
+/*!40000 ALTER TABLE `parametre` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reservation`
+--
+
+DROP TABLE IF EXISTS `reservation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `reservation` (
+  `Id_reservation` int(11) NOT NULL AUTO_INCREMENT,
+  `date_arriver` datetime NOT NULL,
+  `nbr_passager` int(11) NOT NULL,
+  `id_client` varchar(20) NOT NULL,
+  `Id_hotel` int(11) NOT NULL,
+  `id_aeroport` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id_reservation`),
+  KEY `Id_hotel` (`Id_hotel`),
+  KEY `fk_reservation_aeroport` (`id_aeroport`),
+  CONSTRAINT `fk_reservation_aeroport` FOREIGN KEY (`id_aeroport`) REFERENCES `aeroport` (`id`),
+  CONSTRAINT `reservation_ibfk_1` FOREIGN KEY (`Id_hotel`) REFERENCES `hotel` (`Id_hotel`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reservation`
+--
+
+LOCK TABLES `reservation` WRITE;
+/*!40000 ALTER TABLE `reservation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `reservation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `token`
+--
+
+DROP TABLE IF EXISTS `token`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `token` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` varchar(36) NOT NULL DEFAULT uuid(),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `expires_at` datetime NOT NULL DEFAULT (current_timestamp() + interval 1 day),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `token`
+--
+
+LOCK TABLES `token` WRITE;
+/*!40000 ALTER TABLE `token` DISABLE KEYS */;
+/*!40000 ALTER TABLE `token` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `voiture`
+--
+
+DROP TABLE IF EXISTS `voiture`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `voiture` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `immatriculation` varchar(50) NOT NULL,
+  `nombre_place` int(11) NOT NULL,
+  `id_consommation` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `immatriculation` (`immatriculation`),
+  KEY `fk_voiture_consommation` (`id_consommation`),
+  CONSTRAINT `fk_voiture_consommation` FOREIGN KEY (`id_consommation`) REFERENCES `consommation` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `voiture`
+--
+
+LOCK TABLES `voiture` WRITE;
+/*!40000 ALTER TABLE `voiture` DISABLE KEYS */;
+/*!40000 ALTER TABLE `voiture` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-03-12 10:33:11

@@ -409,8 +409,10 @@ public class AssignationController {
         }
 
         String[] tokens = reservationIds.split(",");
-        java.util.Set<Integer> assignedReservationIds = new AssignationRepository().findAssignedReservationIds();
         AssignationRepository assignationRepository = new AssignationRepository();
+        java.util.Set<Integer> assignedReservationIds = assignationRepository.findAssignedReservationIds();
+        ReservationRepository reservationRepository = new ReservationRepository();
+        List<Reservation> reservationsToAssign = new ArrayList<>();
         int inserted = 0;
         int skipped = 0;
 
@@ -424,11 +426,62 @@ public class AssignationController {
                     skipped++;
                     continue;
                 }
-                assignationRepository.insert(new Assignation(0, idReservation, voitureId));
-                inserted++;
+                Reservation reservation = reservationRepository.findById(idReservation);
+                if (reservation == null) {
+                    skipped++;
+                    continue;
+                }
+                reservationsToAssign.add(reservation);
             } catch (NumberFormatException e) {
                 skipped++;
             }
+        }
+
+        if (reservationsToAssign.isEmpty()) {
+            mv.addItem("message", "Aucune reservation valide a assigner.");
+            mv.setJspName("assignationMethodResult");
+            return mv;
+        }
+
+        Voiture selectedCar = new VoitureRepository().findById(voitureId);
+        if (selectedCar == null) {
+            mv.addItem("message", "Voiture introuvable.");
+            mv.setJspName("assignationMethodResult");
+            return mv;
+        }
+
+        int usedSeats = countPassengers(reservationsToAssign);
+        int remainingSeats = selectedCar.getNombrePlace() - usedSeats;
+        Parametre currentParametre = new ParametreRepository().getCurrent();
+        double vitesseMoyenne = (currentParametre != null) ? currentParametre.getVitesseMoyenne() : 0.0;
+        VehicleAssignmentPlan plan = buildVehiclePlan(
+                new DistanceRepository(),
+                selectedCar,
+                reservationsToAssign,
+                usedSeats,
+                remainingSeats,
+                vitesseMoyenne
+        );
+
+        LocalDate debutTrajet = toLocalDate(plan.getDateDepart());
+        LocalDate finTrajet = toLocalDate(plan.getDateRetourAeroport());
+        if (finTrajet == null) {
+            finTrajet = debutTrajet;
+        }
+
+        if (!assignationRepository.isCarAvailable(voitureId, debutTrajet, finTrajet)) {
+            mv.addItem("message", "Voiture indisponible sur la periode demandee.");
+            mv.setJspName("assignationMethodResult");
+            return mv;
+        }
+
+        for (Reservation reservation : reservationsToAssign) {
+            assignationRepository.insert(new Assignation(0,
+                    reservation.getIdReservation(),
+                    voitureId,
+                    debutTrajet,
+                    finTrajet));
+            inserted++;
         }
 
         mv.addItem("message", "Assignations enregistrées : " + inserted + ", ignorées : " + skipped + ".");

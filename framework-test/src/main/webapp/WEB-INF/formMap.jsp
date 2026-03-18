@@ -4,8 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Exemple de formulaire JSP</title>
+    <style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <h2>Formulaire exemple</h2>
     <form action="<%= request.getContextPath() %>/TestClass/formMap" method="post">
         <!-- Input text -->
@@ -45,5 +51,8 @@
         <button type="submit">Envoyer</button>
         <button type="reset">Réinitialiser</button>
     </form>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

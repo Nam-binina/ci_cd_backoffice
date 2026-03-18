@@ -3,24 +3,17 @@
 <html>
 <head>
     <title>Résultat Login</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
-        .container { max-width: 500px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .success { color: green; font-size: 18px; text-align: center; padding: 20px; background-color: #d4edda; border-radius: 4px; }
-        .info { margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 4px; }
-        .links { margin-top: 20px; text-align: center; }
-        a { color: #007bff; text-decoration: none; margin: 0 10px; }
-        .btn { display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px; margin: 5px; }
-        .btn:hover { background-color: #45a049; }
-        .btn-danger { background-color: #dc3545; }
-        .btn-danger:hover { background-color: #c82333; }
-        .role-badge { display: inline-block; padding: 5px 15px; background-color: #28a745; color: white; border-radius: 20px; font-weight: bold; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>✅ Connexion Réussie</h1>
+        <h1 class="page-title">✅ Connexion Réussie</h1>
         
         <p class="success">${message}</p>
         
@@ -47,5 +40,8 @@
             <a href="${pageContext.request.contextPath}/test-auth.html">🏠 Page de test principale</a>
         </div>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

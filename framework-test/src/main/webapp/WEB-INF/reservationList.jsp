@@ -6,16 +6,16 @@
 <html>
 <head>
     <title>Liste des réservations</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
-    <h1>Liste des réservations</h1>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
+    <h1 class="page-title">Liste des réservations</h1>
 
     <%
         DateTimeFormatter displayDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -55,5 +55,8 @@
     <%
         }
     %>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

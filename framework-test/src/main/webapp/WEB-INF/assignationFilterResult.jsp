@@ -7,18 +7,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assignations par date</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .links { margin-top: 20px; }
-        .links a { margin-right: 10px; text-decoration: none; color: #007bff; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
-<h1>Assignations du ${date}</h1>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
+<h1 class="page-title">Assignations du ${date}</h1>
 
 <%
     List<AssignationDetail> details = (List<AssignationDetail>) request.getAttribute("details");
@@ -58,5 +56,8 @@
     <a href="${pageContext.request.contextPath}/assignation/filter">🔎 Nouvelle recherche</a>
     <a href="${pageContext.request.contextPath}/assignation/page">⬅ Retour assignations</a>
 </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>

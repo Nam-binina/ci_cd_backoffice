@@ -5,27 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Créer un token</title>
+    
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
-        .container { max-width: 550px; margin: 0 auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .form-group { margin: 20px 0; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        select, input[type="number"] {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px;
-        }
-        .hint { font-size: 13px; color: #888; margin-top: 5px; }
-        button { width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px; border: none; cursor: pointer; border-radius: 6px; font-size: 16px; font-weight: 600; margin-top: 10px; }
-        button:hover { opacity: 0.9; }
-        .links { margin-top: 25px; text-align: center; }
-        .links a { color: #667eea; text-decoration: none; margin: 0 10px; }
-        .links a:hover { text-decoration: underline; }
-        .info-box { background: #f0f4ff; border: 1px solid #d0d9ff; border-radius: 6px; padding: 15px; margin-bottom: 20px; font-size: 14px; color: #555; line-height: 1.6; }
-    </style>
+<%@ include file="/assets/theme.css" %>
+</style>
 </head>
 <body>
+    <%@ include file="/WEB-INF/jspf/site-header.jspf" %>
+    <main class="page-main">
+        <section class="content-card">
     <div class="container">
-        <h1>🔑 Créer un token d'accès</h1>
+        <h1 class="page-title">🔑 Créer un token d'accès</h1>
 
         <div class="info-box">
             Un token permet d'autoriser l'accès au <strong>frontoffice</strong>.
@@ -56,5 +46,8 @@
             <a href="${pageContext.request.contextPath}/backoffice">⬅ Retour backoffice</a>
         </div>
     </div>
+        </section>
+    </main>
+    <%@ include file="/WEB-INF/jspf/site-footer.jspf" %>
 </body>
 </html>
