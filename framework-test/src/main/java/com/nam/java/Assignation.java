@@ -8,6 +8,7 @@ public class Assignation {
     private int idVoiture;
     private LocalDate debutTrajet;
     private LocalDate finTrajet;
+    private Double distanceTotale;
 
     public Assignation() {
     }
@@ -24,6 +25,15 @@ public class Assignation {
         this.idVoiture = idVoiture;
         this.debutTrajet = debutTrajet;
         this.finTrajet = finTrajet;
+    }
+
+    public Assignation(int id, int idReservation, int idVoiture, LocalDate debutTrajet, LocalDate finTrajet, Double distanceTotale) {
+        this.id = id;
+        this.idReservation = idReservation;
+        this.idVoiture = idVoiture;
+        this.debutTrajet = debutTrajet;
+        this.finTrajet = finTrajet;
+        this.distanceTotale = distanceTotale;
     }
 
     public int getId() {
@@ -66,9 +76,17 @@ public class Assignation {
         this.finTrajet = finTrajet;
     }
 
+    public Double getDistanceTotale() {
+        return distanceTotale;
+    }
+
+    public void setDistanceTotale(Double distanceTotale) {
+        this.distanceTotale = distanceTotale;
+    }
+
     @Override
     public String toString() {
         return "Assignation{id=" + id + ", idReservation=" + idReservation + ", idVoiture=" + idVoiture
-                + ", debutTrajet=" + debutTrajet + ", finTrajet=" + finTrajet + "}";
+                + ", debutTrajet=" + debutTrajet + ", finTrajet=" + finTrajet + ", distanceTotale=" + distanceTotale + "}";
     }
 }

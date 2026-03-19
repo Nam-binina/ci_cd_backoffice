@@ -3,9 +3,36 @@
 <html>
 <head>
     <title>Assignation automatique</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
 <%@ include file="/assets/theme.css" %>
+
+/* Correctif lisibilité input date */
+.content-card input[type="date"] {
+    color: #1a1612 !important;
+    -webkit-text-fill-color: #1a1612 !important;
+    background: #ffffff !important;
+    color-scheme: light;
+}
+
+.content-card input[type="date"]::-webkit-datetime-edit,
+.content-card input[type="date"]::-webkit-datetime-edit-text,
+.content-card input[type="date"]::-webkit-datetime-edit-month-field,
+.content-card input[type="date"]::-webkit-datetime-edit-day-field,
+.content-card input[type="date"]::-webkit-datetime-edit-year-field {
+    color: #1a1612 !important;
+    -webkit-text-fill-color: #1a1612 !important;
+}
+
+.content-card input[type="date"]::-webkit-date-and-time-value {
+    color: #1a1612 !important;
+    -webkit-text-fill-color: #1a1612 !important;
+}
+
+.content-card input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.9;
+    cursor: pointer;
+}
 </style>
 </head>
 <body>
