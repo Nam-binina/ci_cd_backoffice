@@ -837,33 +837,53 @@ public class AssignationController {
             return usedSeats;
         }
 
-        int index = 0;
-        while (index < sourceReservations.size() && usedSeats < carCapacity) {
-            Reservation candidate = sourceReservations.get(index);
-            if (candidate == headReservation) {
-                index++;
-                continue;
+        while (usedSeats < carCapacity && !sourceReservations.isEmpty()) {
+            int remainingSeats = carCapacity - usedSeats;
+            int indexToUse = -1;
+
+            for (int i = 0; i < sourceReservations.size(); i++) {
+                Reservation candidate = sourceReservations.get(i);
+                if (candidate == headReservation) {
+                    continue;
+                }
+                if (candidate.getNbrPassager() <= remainingSeats) {
+                    indexToUse = i;
+                    break;
+                }
             }
 
-            int remainingSeats = carCapacity - usedSeats;
-            if (candidate.getNbrPassager() <= remainingSeats) {
+            if (indexToUse >= 0) {
+                Reservation candidate = sourceReservations.get(indexToUse);
                 assignedReservations.add(candidate);
                 usedSeats += candidate.getNbrPassager();
-                sourceReservations.remove(index);
+                sourceReservations.remove(indexToUse);
                 continue;
             }
 
+            int splitIndex = -1;
+            for (int i = 0; i < sourceReservations.size(); i++) {
+                if (sourceReservations.get(i) != headReservation) {
+                    splitIndex = i;
+                    break;
+                }
+            }
+
+            if (splitIndex < 0 || remainingSeats <= 0) {
+                break;
+            }
+
+            Reservation candidate = sourceReservations.get(splitIndex);
             Reservation assignedPart = cloneReservationWithPassengers(candidate, remainingSeats);
             Reservation remainingPart = cloneReservationWithPassengers(
                 candidate,
                 candidate.getNbrPassager() - remainingSeats
             );
             assignedReservations.add(assignedPart);
-            sourceReservations.remove(index);
+            sourceReservations.remove(splitIndex);
             if (remainderToPriority && priorityReservations != null) {
                 priorityReservations.add(0, remainingPart);
             } else {
-                sourceReservations.add(index, remainingPart);
+                sourceReservations.add(splitIndex, remainingPart);
             }
             usedSeats = carCapacity;
             break;
