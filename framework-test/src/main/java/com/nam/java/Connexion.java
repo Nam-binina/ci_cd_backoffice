@@ -13,7 +13,7 @@ public final class Connexion {
 
     private static final String URL = "jdbc:mysql://localhost:3306/ci_cd?useSSL=false&serverTimezone=UTC";
     private static final String USER = "root";
-    private static final String PASSWORD = "12345678";
+    private static final String PASSWORD = "";
 
     private Connexion() {
     }
