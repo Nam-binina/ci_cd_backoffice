@@ -30,7 +30,7 @@ jar -cvf "$name".war -C build .
 
 # /home/safidy/Documents/logiciel/apache-tomcat-9.0.89
 
-TOMCAT_PATH="/home/diary/Documents/L2/tomcat/apache-tomcat-9.0.82/webapps"
+TOMCAT_PATH="/home/nam/Documents/apache-tomcat-9.0.115/webapps/"
 
 if [ -d "$TOMCAT_PATH" ]; then
     rm -f "$TOMCAT_PATH/$name.war"
