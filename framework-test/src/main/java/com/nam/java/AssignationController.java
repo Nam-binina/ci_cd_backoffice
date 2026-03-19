@@ -382,11 +382,12 @@ public class AssignationController {
                 reservationIds.add(reservation.getIdReservation());
             }
 
-            List<Reservation> sortedReservations = new ArrayList<>(processingReservations);
-            sortedReservations.sort(Comparator
+                Comparator<Reservation> reservationComparator = Comparator
                     .comparingInt(Reservation::getNbrPassager)
                     .reversed()
-                    .thenComparingInt(Reservation::getIdReservation));
+                    .thenComparingInt(Reservation::getIdReservation);
+                List<Reservation> sortedReservations = new ArrayList<>(processingReservations);
+                sortedReservations.sort(reservationComparator);
 
             List<Voiture> availableCars = new ArrayList<>(cars);
             availableCars.sort(Comparator
@@ -407,11 +408,16 @@ public class AssignationController {
 
             while (!sortedReservations.isEmpty()) {
                 Reservation headReservation = sortedReservations.get(0);
+                int maxCapacity = getMaxCapacity(availableCars);
+                int requiredSeats = headReservation.getNbrPassager();
+                if (maxCapacity > 0 && requiredSeats > maxCapacity) {
+                    requiredSeats = maxCapacity;
+                }
                 int selectedCarIndex = chooseCarIndexByPriority(
                         availableCars,
-                        headReservation.getNbrPassager(),
-            dieselConsommationIds,
-            tripCounts
+                        requiredSeats,
+                        dieselConsommationIds,
+                        tripCounts
                 );
 
                 if (selectedCarIndex < 0) {
@@ -421,11 +427,25 @@ public class AssignationController {
                 }
 
                 Voiture selectedCar = availableCars.get(selectedCarIndex);
-                List<Reservation> selectedReservations = buildReservationsForCar(
+                List<Reservation> selectedReservations = new ArrayList<>();
+                if (headReservation.getNbrPassager() > selectedCar.getNombrePlace()) {
+                    Reservation assignedPart = cloneReservationWithPassengers(headReservation, selectedCar.getNombrePlace());
+                    Reservation remainingPart = cloneReservationWithPassengers(
+                        headReservation,
+                        headReservation.getNbrPassager() - selectedCar.getNombrePlace()
+                    );
+                    selectedReservations.add(assignedPart);
+                    sortedReservations.remove(0);
+                    sortedReservations.add(remainingPart);
+                    sortedReservations.sort(reservationComparator);
+                } else {
+                    selectedReservations = buildReservationsForCar(
                         sortedReservations,
                         headReservation,
                         selectedCar.getNombrePlace()
-                );
+                    );
+                    sortedReservations.removeAll(selectedReservations);
+                }
                 int usedSeats = countPassengers(selectedReservations);
                 int remainingSeats = selectedCar.getNombrePlace() - usedSeats;
 
@@ -447,7 +467,6 @@ public class AssignationController {
                 }
                 selectedCarReadyTimes.add(carNextAvailable.get(selectedCar.getId()));
                 availableCars.remove(selectedCarIndex);
-                sortedReservations.removeAll(selectedReservations);
             }
 
             LocalDateTime groupDeparture = findGroupDepartureFromPlans(plans, selectedCarReadyTimes);
@@ -742,6 +761,33 @@ public class AssignationController {
         return total;
     }
 
+    private Reservation cloneReservationWithPassengers(Reservation source, int passengers) {
+        if (source == null) {
+            return null;
+        }
+        return new Reservation(
+                source.getIdReservation(),
+                source.getDateArriver(),
+                passengers,
+                source.getIdClient(),
+                source.getIdHotel(),
+                source.getIdAeroport()
+        );
+    }
+
+    private int getMaxCapacity(List<Voiture> cars) {
+        int max = 0;
+        if (cars == null) {
+            return max;
+        }
+        for (Voiture car : cars) {
+            if (car != null && car.getNombrePlace() > max) {
+                max = car.getNombrePlace();
+            }
+        }
+        return max;
+    }
+
     private LocalDate toLocalDate(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.toLocalDate() : null;
     }
@@ -807,7 +853,17 @@ public class AssignationController {
                 continue;
             }
             try {
-                int idReservation = Integer.parseInt(token.trim());
+                String trimmed = token.trim();
+                int assignedCount = -1;
+                String idToken = trimmed;
+                if (trimmed.contains(":")) {
+                    String[] parts = trimmed.split(":");
+                    if (parts.length >= 2) {
+                        idToken = parts[0];
+                        assignedCount = Integer.parseInt(parts[1]);
+                    }
+                }
+                int idReservation = Integer.parseInt(idToken.trim());
                 if (assignedReservationIds.contains(idReservation)) {
                     skipped++;
                     continue;
@@ -817,7 +873,34 @@ public class AssignationController {
                     skipped++;
                     continue;
                 }
-                reservationsToAssign.add(reservation);
+                if (assignedCount <= 0) {
+                    assignedCount = reservation.getNbrPassager();
+                }
+                if (assignedCount > reservation.getNbrPassager()) {
+                    skipped++;
+                    continue;
+                }
+                if (assignedCount < reservation.getNbrPassager()) {
+                    int remaining = reservation.getNbrPassager() - assignedCount;
+                    reservationRepository.updatePassengers(idReservation, remaining);
+                    Reservation assignedReservation = new Reservation(
+                            0,
+                            reservation.getDateArriver(),
+                            assignedCount,
+                            reservation.getIdClient(),
+                            reservation.getIdHotel(),
+                            reservation.getIdAeroport()
+                    );
+                    int newId = reservationRepository.insertAndReturnId(assignedReservation);
+                    if (newId <= 0) {
+                        skipped++;
+                        continue;
+                    }
+                    assignedReservation.setIdReservation(newId);
+                    reservationsToAssign.add(assignedReservation);
+                } else {
+                    reservationsToAssign.add(reservation);
+                }
             } catch (NumberFormatException e) {
                 skipped++;
             }

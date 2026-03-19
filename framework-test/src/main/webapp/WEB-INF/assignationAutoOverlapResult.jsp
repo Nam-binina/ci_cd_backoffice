@@ -174,7 +174,9 @@
                                                         if (reservationIds.length() > 0) {
                                                             reservationIds.append(",");
                                                         }
-                                                        reservationIds.append(reservation.getIdReservation());
+                                                        reservationIds.append(reservation.getIdReservation())
+                                                            .append(":")
+                                                            .append(reservation.getNbrPassager());
                                                         if (assignedReservationIds == null || !assignedReservationIds.contains(reservation.getIdReservation())) {
                                                             allAssigned = false;
                                                         }
