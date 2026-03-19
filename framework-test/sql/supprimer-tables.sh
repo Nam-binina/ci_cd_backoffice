@@ -6,7 +6,7 @@ DB_PORT="${DB_PORT:-3306}"
 DB_NAME="${DB_NAME:-ci_cd}"
 DB_USER="${DB_USER:-root}"
 DB_PASSWORD="${DB_PASSWORD:-}"
-MYSQL_BIN="${MYSQL_BIN:-/usr/bin/mariadb}"
+MYSQL_BIN="${MYSQL_BIN:-/opt/lampp/bin/mysql}"
 USE_SUDO="${USE_SUDO:-true}"
 
 if [[ "$USE_SUDO" == "true" ]]; then
@@ -15,7 +15,7 @@ else
   MYSQL_CMD=("$MYSQL_BIN")
 fi
 
-MYSQL_ARGS=("$DB_NAME" "--default-character-set=utf8mb4")
+MYSQL_ARGS=("-h" "$DB_HOST" "-P" "$DB_PORT" "-u" "$DB_USER" "$DB_NAME" "--default-character-set=utf8mb4")
 
 if [[ -n "$DB_PASSWORD" ]]; then
   export MYSQL_PWD="$DB_PASSWORD"
