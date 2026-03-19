@@ -8,16 +8,48 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.sql.Types;
 
 public class AssignationRepository {
 
     public void insert(Assignation assignation) {
-        String sql = "INSERT INTO assignation (id_reservation, id_voiture, debut_trajet, fin_trajet) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO assignation (id_reservation, id_voiture, debut_trajet, fin_trajet, distance_totale) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = Connexion.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, assignation.getIdReservation());
+            ps.setInt(2, assignation.getIdVoiture());
+            if (assignation.getDebutTrajet() != null) {
+                ps.setDate(3, Date.valueOf(assignation.getDebutTrajet()));
+            } else {
+                ps.setNull(3, Types.DATE);
+            }
+            if (assignation.getFinTrajet() != null) {
+                ps.setDate(4, Date.valueOf(assignation.getFinTrajet()));
+            } else {
+                ps.setNull(4, Types.DATE);
+            }
+            if (assignation.getDistanceTotale() != null) {
+                ps.setDouble(5, assignation.getDistanceTotale());
+            } else {
+                ps.setNull(5, Types.DOUBLE);
+            }
+            ps.executeUpdate();
+            return;
+        } catch (SQLException e) {
+            if (e.getMessage() == null || !e.getMessage().toLowerCase().contains("distance_totale")) {
+                throw new RuntimeException("Erreur lors de l'insertion de l'assignation : " + e.getMessage(), e);
+            }
+        }
+
+        String fallbackSql = "INSERT INTO assignation (id_reservation, id_voiture, debut_trajet, fin_trajet) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = Connexion.getConnection();
+            PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
 
             ps.setInt(1, assignation.getIdReservation());
             ps.setInt(2, assignation.getIdVoiture());
@@ -38,7 +70,7 @@ public class AssignationRepository {
     }
 
     public List<Assignation> findAll() {
-        String sql = "SELECT id, id_reservation, id_voiture, debut_trajet, fin_trajet FROM assignation ORDER BY id DESC";
+    String sql = "SELECT id, id_reservation, id_voiture, debut_trajet, fin_trajet, distance_totale FROM assignation ORDER BY id DESC";
         List<Assignation> assignations = new ArrayList<>();
 
         try (Connection conn = Connexion.getConnection();
@@ -53,7 +85,8 @@ public class AssignationRepository {
                 Date finTrajetDate = rs.getDate("fin_trajet");
                 LocalDate debutTrajet = (debutTrajetDate != null) ? debutTrajetDate.toLocalDate() : null;
                 LocalDate finTrajet = (finTrajetDate != null) ? finTrajetDate.toLocalDate() : null;
-                assignations.add(new Assignation(id, idReservation, idVoiture, debutTrajet, finTrajet));
+                Double distanceTotale = rs.getObject("distance_totale", Double.class);
+                assignations.add(new Assignation(id, idReservation, idVoiture, debutTrajet, finTrajet, distanceTotale));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du chargement des assignations", e);
@@ -114,6 +147,88 @@ public class AssignationRepository {
         }
 
         return assignedReservationIds;
+    }
+
+    public Map<Integer, Integer> countTripsByCarIds(List<Integer> carIds) {
+        Map<Integer, Integer> result = new HashMap<>();
+        if (carIds == null || carIds.isEmpty()) {
+            return result;
+        }
+
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < carIds.size(); i++) {
+            if (i > 0) {
+                placeholders.append(",");
+            }
+            placeholders.append("?");
+        }
+
+        String sql = "SELECT id_voiture, COUNT(DISTINCT CONCAT(debut_trajet, '|', fin_trajet)) AS trip_count " +
+                "FROM assignation " +
+                "WHERE id_voiture IN (" + placeholders + ") " +
+                "AND debut_trajet IS NOT NULL " +
+                "AND fin_trajet IS NOT NULL " +
+                "GROUP BY id_voiture";
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < carIds.size(); i++) {
+                ps.setInt(i + 1, carIds.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.put(rs.getInt("id_voiture"), rs.getInt("trip_count"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du calcul des voyages par voiture", e);
+        }
+
+        return result;
+    }
+
+    public Map<Integer, Integer> countTripsByCarIdsForDate(List<Integer> carIds, java.time.LocalDate date) {
+        Map<Integer, Integer> result = new HashMap<>();
+        if (carIds == null || carIds.isEmpty() || date == null) {
+            return result;
+        }
+
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < carIds.size(); i++) {
+            if (i > 0) {
+                placeholders.append(",");
+            }
+            placeholders.append("?");
+        }
+
+        String sql = "SELECT id_voiture, COUNT(DISTINCT CONCAT(debut_trajet, '|', fin_trajet)) AS trip_count " +
+                "FROM assignation " +
+                "WHERE id_voiture IN (" + placeholders + ") " +
+                "AND debut_trajet = ? " +
+                "AND fin_trajet IS NOT NULL " +
+                "GROUP BY id_voiture";
+
+        try (Connection conn = Connexion.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int index = 1;
+            for (Integer carId : carIds) {
+                ps.setInt(index++, carId);
+            }
+            ps.setDate(index, Date.valueOf(date));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.put(rs.getInt("id_voiture"), rs.getInt("trip_count"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du calcul des voyages par voiture", e);
+        }
+
+        return result;
     }
 
     public List<AssignationDetail> findAssignedByDate(LocalDate date) {
