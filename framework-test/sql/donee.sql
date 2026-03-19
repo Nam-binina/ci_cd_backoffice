@@ -47,13 +47,8 @@ INSERT INTO consommation (description) VALUES
 
 -- Parc voitures : doublons de capacité pour tester Diesel + aléatoire
 INSERT INTO voiture (immatriculation, nombre_place, id_consommation) VALUES
-('V12-D-1', 12, 2),
-('V12-E-1', 12, 1),
-('V08-D-1', 8, 2),
-('V08-D-2', 8, 2),
-('V08-E-1', 8, 1),
-('V05-D-1', 5, 2),
-('V05-E-1', 5, 1);
+('V12-D-1', 15, 2),
+('V05-E-1', 6, 1);
 
 -- Paramètres : vitesse pour heure retour, TA=30 min pour les groupes
 INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
@@ -76,20 +71,20 @@ INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
 
 INSERT INTO reservation (date_arriver, nbr_passager, id_client, id_hotel, id_aeroport) VALUES
 -- Groupe 1
-('2026-03-12 08:00:00', 10, 'C001', 1, 1),
-('2026-03-12 08:10:00', 5,  'C002', 2, 1),
-('2026-03-12 08:20:00', 2,  'C003', 3, 1),
-('2026-03-12 08:30:00', 7,  'C004', 4, 1),
+('2026-03-12 08:00:00', 20, 'C001', 1, 1),
+('2026-03-12 08:10:00', 10,  'C002', 2, 1),
+('2026-03-12 12:20:00', 5,  'C003', 3, 1);
+-- ('2026-03-12 08:30:00', 7,  'C004', 4, 1),
 
--- Groupe 2
-('2026-03-12 09:20:00', 6,  'C005', 5, 1),
-('2026-03-12 09:45:00', 4,  'C006', 2, 1),
-('2026-03-12 09:50:00', 20, 'C007', 1, 1),
+-- -- Groupe 2
+-- ('2026-03-12 09:20:00', 6,  'C005', 5, 1),
+-- ('2026-03-12 09:45:00', 4,  'C006', 2, 1),
+-- ('2026-03-12 09:50:00', 20, 'C007', 1, 1),
 
--- Groupe 3
-('2026-03-12 10:40:00', 9,  'C008', 3, 1),
-('2026-03-12 10:50:00', 3,  'C009', 4, 1),
-('2026-03-12 11:00:00', 1,  'C010', 5, 1);
+-- -- Groupe 3
+-- ('2026-03-12 10:40:00', 9,  'C008', 3, 1),
+-- ('2026-03-12 10:50:00', 3,  'C009', 4, 1),
+-- ('2026-03-12 11:00:00', 1,  'C010', 5, 1);
 
 INSERT INTO token (uid) VALUES
 (UUID()),
