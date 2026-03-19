@@ -397,7 +397,15 @@ public class AssignationController {
                     .thenComparingInt(Voiture::getId));
             List<Voiture> candidateCarsForGroup = new ArrayList<>();
             for (Voiture car : availableCars) {
-                if (isCarCandidateForGroup(car.getId(), carNextAvailable, groupEnd)) {
+                LocalDateTime availability = getCarAvailabilityTime(car, groupStart);
+                LocalDateTime readyAt = carNextAvailable.get(car.getId());
+                if (readyAt == null || (availability != null && availability.isAfter(readyAt))) {
+                    readyAt = availability;
+                    if (readyAt != null) {
+                        carNextAvailable.put(car.getId(), readyAt);
+                    }
+                }
+                if (isCarCandidateForGroup(readyAt, groupEnd)) {
                     candidateCarsForGroup.add(car);
                 }
             }
@@ -515,15 +523,22 @@ public class AssignationController {
         return results;
     }
 
-    private boolean isCarCandidateForGroup(int carId, Map<Integer, LocalDateTime> carNextAvailable, LocalDateTime groupEnd) {
-        LocalDateTime readyAt = carNextAvailable.get(carId);
-        if (readyAt == null) {
-            return true;
-        }
-        if (groupEnd == null) {
+    private boolean isCarCandidateForGroup(LocalDateTime readyAt, LocalDateTime groupEnd) {
+        if (readyAt == null || groupEnd == null) {
             return true;
         }
         return !readyAt.isAfter(groupEnd);
+    }
+
+    private LocalDateTime getCarAvailabilityTime(Voiture car, LocalDateTime groupStart) {
+        if (car == null || groupStart == null) {
+            return null;
+        }
+        java.time.LocalTime heureDisponibilite = car.getHeureDisponibilite();
+        if (heureDisponibilite == null) {
+            return null;
+        }
+        return java.time.LocalDateTime.of(groupStart.toLocalDate(), heureDisponibilite);
     }
 
     private int chooseCarIndexByPriority(

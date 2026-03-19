@@ -6,6 +6,7 @@ public class Voiture {
     private int nombrePlace;
     private int idConsommation;
     private double vitesseMoyenne;
+    private java.time.LocalTime heureDisponibilite;
 
     public Voiture() {
     }
@@ -16,6 +17,15 @@ public class Voiture {
         this.nombrePlace = nombrePlace;
         this.idConsommation = idConsommation;
         this.vitesseMoyenne = vitesseMoyenne;
+    }
+
+    public Voiture(int id, String immatriculation, int nombrePlace, int idConsommation, double vitesseMoyenne, java.time.LocalTime heureDisponibilite) {
+        this.id = id;
+        this.immatriculation = immatriculation;
+        this.nombrePlace = nombrePlace;
+        this.idConsommation = idConsommation;
+        this.vitesseMoyenne = vitesseMoyenne;
+        this.heureDisponibilite = heureDisponibilite;
     }
 
     public int getId() {
@@ -58,9 +68,18 @@ public class Voiture {
         this.vitesseMoyenne = vitesseMoyenne;
     }
 
+    public java.time.LocalTime getHeureDisponibilite() {
+        return heureDisponibilite;
+    }
+
+    public void setHeureDisponibilite(java.time.LocalTime heureDisponibilite) {
+        this.heureDisponibilite = heureDisponibilite;
+    }
+
     @Override
     public String toString() {
         return "Voiture{id=" + id + ", immatriculation='" + immatriculation + "', nombrePlace=" + nombrePlace +
-                ", idConsommation=" + idConsommation + ", vitesseMoyenne=" + vitesseMoyenne + "}";
+                ", idConsommation=" + idConsommation + ", vitesseMoyenne=" + vitesseMoyenne +
+                ", heureDisponibilite=" + heureDisponibilite + "}";
     }
 }
