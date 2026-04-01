@@ -784,7 +784,7 @@ public class AssignationController {
             headReservation,
             carCapacity,
             priorityReservations,
-            true,
+            false,
             usedSeats
         );
 
@@ -817,7 +817,7 @@ public class AssignationController {
             headReservation,
             carCapacity,
             priorityReservations,
-            true,
+            false,
             usedSeats
         );
 
@@ -837,35 +837,61 @@ public class AssignationController {
             return usedSeats;
         }
 
-        while (usedSeats < carCapacity && !sourceReservations.isEmpty()) {
+        while (usedSeats < carCapacity
+                && ((!sourceReservations.isEmpty()) || (priorityReservations != null && !priorityReservations.isEmpty()))) {
             int remainingSeats = carCapacity - usedSeats;
-            int bestIndex = -1;
+            Reservation candidate = null;
+            boolean fromPriority = false;
             int bestDiff = Integer.MAX_VALUE;
             int bestPassengers = -1;
+            int indexToUse = -1;
 
             for (int i = 0; i < sourceReservations.size(); i++) {
-                Reservation candidate = sourceReservations.get(i);
-                if (candidate == headReservation) {
+                Reservation current = sourceReservations.get(i);
+                if (current == headReservation) {
                     continue;
                 }
-                int passengers = candidate.getNbrPassager();
+                int passengers = current.getNbrPassager();
                 int diff = Math.abs(remainingSeats - passengers);
                 if (diff < bestDiff || (diff == bestDiff && passengers > bestPassengers)) {
                     bestDiff = diff;
                     bestPassengers = passengers;
-                    bestIndex = i;
+                    candidate = current;
+                    indexToUse = i;
+                    fromPriority = false;
                 }
             }
 
-            if (bestIndex < 0 || remainingSeats <= 0) {
+            if (priorityReservations != null) {
+                for (int i = 0; i < priorityReservations.size(); i++) {
+                    Reservation current = priorityReservations.get(i);
+                    if (current == headReservation) {
+                        continue;
+                    }
+                    int passengers = current.getNbrPassager();
+                    int diff = Math.abs(remainingSeats - passengers);
+                    if (diff < bestDiff || (diff == bestDiff && passengers > bestPassengers)) {
+                        bestDiff = diff;
+                        bestPassengers = passengers;
+                        candidate = current;
+                        indexToUse = i;
+                        fromPriority = true;
+                    }
+                }
+            }
+
+            if (candidate == null || remainingSeats <= 0) {
                 break;
             }
 
-            Reservation candidate = sourceReservations.get(bestIndex);
             if (candidate.getNbrPassager() <= remainingSeats) {
                 assignedReservations.add(candidate);
                 usedSeats += candidate.getNbrPassager();
-                sourceReservations.remove(bestIndex);
+                if (fromPriority) {
+                    priorityReservations.remove(indexToUse);
+                } else {
+                    sourceReservations.remove(indexToUse);
+                }
                 continue;
             }
 
@@ -875,11 +901,16 @@ public class AssignationController {
                 candidate.getNbrPassager() - remainingSeats
             );
             assignedReservations.add(assignedPart);
-            sourceReservations.remove(bestIndex);
-            if (remainderToPriority && priorityReservations != null) {
+            if (fromPriority) {
+                priorityReservations.remove(indexToUse);
                 priorityReservations.add(0, remainingPart);
             } else {
-                sourceReservations.add(bestIndex, remainingPart);
+                sourceReservations.remove(indexToUse);
+                if (remainderToPriority && priorityReservations != null) {
+                    priorityReservations.add(0, remainingPart);
+                } else {
+                    sourceReservations.add(indexToUse, remainingPart);
+                }
             }
             usedSeats = carCapacity;
             break;
