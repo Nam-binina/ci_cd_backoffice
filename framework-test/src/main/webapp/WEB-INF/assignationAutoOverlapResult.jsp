@@ -37,7 +37,7 @@
             
             <%-- En-tête avec informations --%>
             <div class="reservations-header">
-                <h1>Réservations par date</h1>
+                <h1>Réservations par date ETU003221 - ETU003154 - ETU003201</h1>
                 <div class="reservations-meta">
                     <% if (dateSelectionnee != null) { %>
                         <span class="meta-item"><strong>📅 Date</strong> <%= dateSelectionnee %></span>
