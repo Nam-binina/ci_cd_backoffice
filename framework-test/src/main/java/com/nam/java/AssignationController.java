@@ -714,7 +714,31 @@ public class AssignationController {
         return normalizedPlans;
     }
 
-    private List<Reservation> buildReservationsForCar(
+    private List<Reservation> buildReservationsForCarWithSplit(
+            List<Reservation> sortedReservations,
+            List<Reservation> priorityReservations,
+            Reservation headReservation,
+            int carCapacity
+    ) {
+        List<Reservation> assignedReservations = new ArrayList<>();
+        assignedReservations.add(headReservation);
+        int usedSeats = headReservation.getNbrPassager();
+
+        usedSeats = fillCarFromList(
+            assignedReservations,
+            sortedReservations,
+            headReservation,
+            carCapacity,
+            priorityReservations,
+            false,
+            usedSeats
+        );
+
+        return assignedReservations;
+    }
+
+    private List<Reservation> buildReservationsForCarFromPriority(
+            List<Reservation> priorityReservations,
             List<Reservation> sortedReservations,
             Reservation headReservation,
             int carCapacity
@@ -723,12 +747,119 @@ public class AssignationController {
         assignedReservations.add(headReservation);
         int usedSeats = headReservation.getNbrPassager();
 
-        for (int index = 1; index < sortedReservations.size(); index++) {
-            Reservation candidate = sortedReservations.get(index);
-            if (usedSeats + candidate.getNbrPassager() <= carCapacity) {
+        usedSeats = fillCarFromList(
+            assignedReservations,
+            priorityReservations,
+            headReservation,
+            carCapacity,
+            priorityReservations,
+            false,
+            usedSeats
+        );
+
+        usedSeats = fillCarFromList(
+            assignedReservations,
+            sortedReservations,
+            headReservation,
+            carCapacity,
+            priorityReservations,
+            false,
+            usedSeats
+        );
+
+        return assignedReservations;
+    }
+
+    private int fillCarFromList(
+            List<Reservation> assignedReservations,
+            List<Reservation> sourceReservations,
+            Reservation headReservation,
+            int carCapacity,
+            List<Reservation> priorityReservations,
+            boolean remainderToPriority,
+            int usedSeats
+    ) {
+        if (sourceReservations == null) {
+            return usedSeats;
+        }
+
+        while (usedSeats < carCapacity
+                && ((!sourceReservations.isEmpty()) || (priorityReservations != null && !priorityReservations.isEmpty()))) {
+            int remainingSeats = carCapacity - usedSeats;
+            Reservation candidate = null;
+            boolean fromPriority = false;
+            int bestDiff = Integer.MAX_VALUE;
+            int bestPassengers = -1;
+            int indexToUse = -1;
+
+            for (int i = 0; i < sourceReservations.size(); i++) {
+                Reservation current = sourceReservations.get(i);
+                if (current == headReservation) {
+                    continue;
+                }
+                int passengers = current.getNbrPassager();
+                int diff = Math.abs(remainingSeats - passengers);
+                if (diff < bestDiff || (diff == bestDiff && passengers > bestPassengers)) {
+                    bestDiff = diff;
+                    bestPassengers = passengers;
+                    candidate = current;
+                    indexToUse = i;
+                    fromPriority = false;
+                }
+            }
+
+            if (priorityReservations != null) {
+                for (int i = 0; i < priorityReservations.size(); i++) {
+                    Reservation current = priorityReservations.get(i);
+                    if (current == headReservation) {
+                        continue;
+                    }
+                    int passengers = current.getNbrPassager();
+                    int diff = Math.abs(remainingSeats - passengers);
+                    if (diff < bestDiff || (diff == bestDiff && passengers > bestPassengers)) {
+                        bestDiff = diff;
+                        bestPassengers = passengers;
+                        candidate = current;
+                        indexToUse = i;
+                        fromPriority = true;
+                    }
+                }
+            }
+
+            if (candidate == null || remainingSeats <= 0) {
+                break;
+            }
+
+            if (candidate.getNbrPassager() <= remainingSeats) {
                 assignedReservations.add(candidate);
                 usedSeats += candidate.getNbrPassager();
+                if (fromPriority) {
+                    priorityReservations.remove(indexToUse);
+                } else {
+                    sourceReservations.remove(indexToUse);
+                }
+                continue;
             }
+
+            Reservation assignedPart = cloneReservationWithPassengers(candidate, remainingSeats);
+            Reservation remainingPart = cloneReservationWithPassengers(
+                candidate,
+                candidate.getNbrPassager() - remainingSeats
+            );
+            assignedReservations.add(assignedPart);
+            if (fromPriority) {
+                priorityReservations.remove(indexToUse);
+                priorityReservations.add(0, remainingPart);
+            } else {
+                sourceReservations.remove(indexToUse);
+                if (remainderToPriority && priorityReservations != null) {
+                    priorityReservations.add(0, remainingPart);
+                } else {
+                    sourceReservations.add(indexToUse, remainingPart);
+                }
+            }
+            usedSeats = carCapacity;
+            break;
         }
 
         return assignedReservations;
