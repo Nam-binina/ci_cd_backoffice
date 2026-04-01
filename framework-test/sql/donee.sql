@@ -15,31 +15,17 @@ INSERT INTO aeroport (nom) VALUES
 
 INSERT INTO hotel (nom, id_aeroport) VALUES
 ('Hotel 1', 1),
-('Hotel 2', 1),
-('Hotel 3', 1),
-('Hotel 4', 1),
-('Hotel 5', 1);
+('Hotel 2', 1);
 
 -- Distances hôtel <-> aéroport
 INSERT INTO hotel_aeroport_distance (id_hotel, id_aeroport, km) VALUES
-(1, 1, 18.00),
-(2, 1, 22.00),
-(3, 1, 16.00),
-(4, 1, 25.00),
-(5, 1, 30.00);
+(1, 1, 90.00),
+(2, 1, 35.00);
 
 -- Distances hôtel <-> hôtel (sens unique par paire)
 INSERT INTO hotel_hotel_distance (from_hotel_id, to_hotel_id, km) VALUES
-(1, 2, 8.00),
-(1, 3, 12.00),
-(1, 4, 15.00),
-(1, 5, 20.00),
-(2, 3, 6.00),
-(2, 4, 10.00),
-(2, 5, 14.00),
-(3, 4, 7.00),
-(3, 5, 9.00),
-(4, 5, 5.00);
+(1, 2, 60.00);
+
 
 INSERT INTO consommation (description) VALUES
 ('Essence'),
@@ -47,13 +33,11 @@ INSERT INTO consommation (description) VALUES
 
 -- Parc voitures : doublons de capacité pour tester Diesel + aléatoire
 INSERT INTO voiture (immatriculation, nombre_place, id_consommation) VALUES
-('V12-D-1', 12, 2),
-('V12-E-1', 12, 1),
-('V08-D-1', 8, 2),
-('V08-D-2', 8, 2),
-('V08-E-1', 8, 1),
-('V05-D-1', 5, 2),
-('V05-E-1', 5, 1);
+('vehicule1',5, 2),
+('vehicule2', 5, 1),
+('vehicule3', 12, 2),
+('vehicule4', 9, 2),
+('vehicule5', 12, 1);
 
 -- Paramètres : vitesse pour heure retour, TA=30 min pour les groupes
 INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
@@ -76,20 +60,23 @@ INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
 
 INSERT INTO reservation (date_arriver, nbr_passager, id_client, id_hotel, id_aeroport) VALUES
 -- Groupe 1
-('2026-03-12 08:00:00', 10, 'C001', 1, 1),
-('2026-03-12 08:10:00', 5,  'C002', 2, 1),
-('2026-03-12 08:20:00', 2,  'C003', 3, 1),
-('2026-03-12 08:30:00', 7,  'C004', 4, 1),
+('2026-03-19 09:00:00', 7, 'C001', 1, 1),
+('2026-03-19 08:00:00', 20,  'C002', 2, 1),
+('2026-03-19 09:10:00', 3,  'C003', 1, 1),
+('2026-03-19 09:15:00', 10,  'C004', 1, 1),
+('2026-03-19 09:20:00', 5,  'C005', 1, 1),
+('2026-03-19 13:30:00', 12,  'C006', 1, 1);
+-- ('2026-03-12 08:30:00', 7,  'C004', 4, 1),
 
--- Groupe 2
-('2026-03-12 09:20:00', 6,  'C005', 5, 1),
-('2026-03-12 09:45:00', 4,  'C006', 2, 1),
-('2026-03-12 09:50:00', 20, 'C007', 1, 1),
+-- -- Groupe 2
+-- ('2026-03-12 09:20:00', 6,  'C005', 5, 1),
+-- ('2026-03-12 09:45:00', 4,  'C006', 2, 1),
+-- ('2026-03-12 09:50:00', 20, 'C007', 1, 1),
 
--- Groupe 3
-('2026-03-12 10:40:00', 9,  'C008', 3, 1),
-('2026-03-12 10:50:00', 3,  'C009', 4, 1),
-('2026-03-12 11:00:00', 1,  'C010', 5, 1);
+-- -- Groupe 3
+-- ('2026-03-12 10:40:00', 9,  'C008', 3, 1),
+-- ('2026-03-12 10:50:00', 3,  'C009', 4, 1),
+-- ('2026-03-12 11:00:00', 1,  'C010', 5, 1);
 
 INSERT INTO token (uid) VALUES
 (UUID()),

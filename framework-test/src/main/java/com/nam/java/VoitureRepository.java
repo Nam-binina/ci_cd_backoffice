@@ -16,7 +16,7 @@ import java.util.Set;
 public class VoitureRepository {
 
     public List<Voiture> findAllOrderBySeatsAsc() {
-        String sql = "SELECT id, immatriculation, nombre_place, id_consommation " +
+    String sql = "SELECT id, immatriculation, nombre_place, id_consommation, heure_disponibilite " +
                 "FROM voiture " +
                 "ORDER BY nombre_place ASC, id ASC";
 
@@ -27,12 +27,14 @@ public class VoitureRepository {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
+                java.sql.Time heureDispo = rs.getTime("heure_disponibilite");
                 voitures.add(new Voiture(
                         rs.getInt("id"),
                         rs.getString("immatriculation"),
                         rs.getInt("nombre_place"),
                         rs.getInt("id_consommation"),
-                        0
+                        0,
+                        heureDispo != null ? heureDispo.toLocalTime() : null
                 ));
             }
         } catch (SQLException e) {
@@ -43,7 +45,7 @@ public class VoitureRepository {
     }
 
     public Voiture findById(int id) {
-        String sql = "SELECT id, immatriculation, nombre_place, id_consommation " +
+    String sql = "SELECT id, immatriculation, nombre_place, id_consommation, heure_disponibilite " +
                 "FROM voiture " +
                 "WHERE id = ?";
 
@@ -55,12 +57,14 @@ public class VoitureRepository {
                 if (!rs.next()) {
                     return null;
                 }
+                java.sql.Time heureDispo = rs.getTime("heure_disponibilite");
                 return new Voiture(
                         rs.getInt("id"),
                         rs.getString("immatriculation"),
                         rs.getInt("nombre_place"),
                         rs.getInt("id_consommation"),
-                        0
+                        0,
+                        heureDispo != null ? heureDispo.toLocalTime() : null
                 );
             }
         } catch (SQLException e) {
@@ -79,7 +83,7 @@ public class VoitureRepository {
      * @throws RuntimeException si une erreur SQL survient
      */
     public List<Voiture> findClosestByRequiredSeats(int requiredSeats) {
-    String sql = "SELECT id, immatriculation, nombre_place, id_consommation " +
+    String sql = "SELECT id, immatriculation, nombre_place, id_consommation, heure_disponibilite " +
                 "FROM voiture " +
                 "WHERE nombre_place >= ? " +
                 "AND nombre_place = (SELECT MIN(nombre_place) FROM voiture WHERE nombre_place >= ?) " +
@@ -95,12 +99,14 @@ public class VoitureRepository {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+            java.sql.Time heureDispo = rs.getTime("heure_disponibilite");
             voitures.add(new Voiture(
                 rs.getInt("id"),
                 rs.getString("immatriculation"),
                 rs.getInt("nombre_place"),
                 rs.getInt("id_consommation"),
-                0
+                0,
+                heureDispo != null ? heureDispo.toLocalTime() : null
             ));
                 }
             }
@@ -126,7 +132,7 @@ public class VoitureRepository {
      * @throws RuntimeException si une erreur SQL survient
      */
     public Voiture findBestByRequiredSeats(int requiredSeats) {
-    String sql = "SELECT v.id, v.immatriculation, v.nombre_place, v.id_consommation " +
+    String sql = "SELECT v.id, v.immatriculation, v.nombre_place, v.id_consommation, v.heure_disponibilite " +
                 "FROM voiture v " +
                 "JOIN consommation c ON c.id = v.id_consommation " +
                 "WHERE v.nombre_place >= ? " +
@@ -145,12 +151,14 @@ public class VoitureRepository {
                     return null;
                 }
 
+        java.sql.Time heureDispo = rs.getTime("heure_disponibilite");
         return new Voiture(
             rs.getInt("id"),
             rs.getString("immatriculation"),
             rs.getInt("nombre_place"),
             rs.getInt("id_consommation"),
-            0
+            0,
+            heureDispo != null ? heureDispo.toLocalTime() : null
         );
             }
         } catch (SQLException e) {
