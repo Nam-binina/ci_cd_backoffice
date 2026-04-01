@@ -350,10 +350,70 @@ public class AssignationController {
         Map<Integer, LocalDateTime> carNextAvailable = new HashMap<>();
         List<Reservation> carryOverReservations = new ArrayList<>();
 
-        for (int groupIndex = 0; groupIndex < reservationGroups.size(); groupIndex++) {
-            List<Reservation> group = reservationGroups.get(groupIndex);
-            LocalDateTime groupStart = group != null && !group.isEmpty() ? group.get(0).getDateArriver() : null;
-            LocalDateTime groupEnd = groupStart != null ? groupStart.plusMinutes(taMinutes) : null;
+        List<Reservation> allReservations = new ArrayList<>();
+        Set<Integer> uniqueReservationIds = new LinkedHashSet<>();
+        if (reservationGroups != null) {
+            for (List<Reservation> group : reservationGroups) {
+                if (group == null) {
+                    continue;
+                }
+                for (Reservation reservation : group) {
+                    if (reservation != null && uniqueReservationIds.add(reservation.getIdReservation())) {
+                        allReservations.add(reservation);
+                    }
+                }
+            }
+        }
+        allReservations.sort(Comparator
+                .comparing(Reservation::getDateArriver, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparingInt(Reservation::getIdReservation));
+
+        int currentIndex = 0;
+        int groupIndex = 0;
+
+        while (currentIndex < allReservations.size() || !carryOverReservations.isEmpty()) {
+            groupIndex++;
+            LocalDateTime earliestCarryOverTime = findEarliestArrival(carryOverReservations);
+            LocalDateTime nextReservationTime = currentIndex < allReservations.size()
+                    ? allReservations.get(currentIndex).getDateArriver()
+                    : null;
+            LocalDateTime referenceTime = earliestCarryOverTime != null ? earliestCarryOverTime : nextReservationTime;
+            if (referenceTime == null) {
+                break;
+            }
+
+            LocalDateTime groupStart = findEarliestCarAvailabilityTime(cars, carNextAvailable, referenceTime);
+            if (groupStart == null) {
+                groupStart = referenceTime;
+            }
+            LocalDateTime groupEnd = groupStart.plusMinutes(taMinutes);
+
+            List<Reservation> newReservations = new ArrayList<>();
+            while (currentIndex < allReservations.size()) {
+                Reservation reservation = allReservations.get(currentIndex);
+                LocalDateTime reservationTime = reservation.getDateArriver();
+                if (reservationTime != null && reservationTime.isAfter(groupEnd)) {
+                    break;
+                }
+                newReservations.add(reservation);
+                currentIndex++;
+            }
+
+            if (carryOverReservations.isEmpty() && newReservations.isEmpty()
+                    && nextReservationTime != null && nextReservationTime.isAfter(groupEnd)) {
+                groupStart = nextReservationTime;
+                groupEnd = groupStart.plusMinutes(taMinutes);
+                while (currentIndex < allReservations.size()) {
+                    Reservation reservation = allReservations.get(currentIndex);
+                    LocalDateTime reservationTime = reservation.getDateArriver();
+                    if (reservationTime != null && reservationTime.isAfter(groupEnd)) {
+                        break;
+                    }
+                    newReservations.add(reservation);
+                    currentIndex++;
+                }
+            }
+
             List<Integer> carriedOverReservationIds = new ArrayList<>();
             for (Reservation reservation : carryOverReservations) {
                 if (reservation != null) {
@@ -369,11 +429,9 @@ public class AssignationController {
                     processingReservations.add(reservation);
                 }
             }
-            if (group != null) {
-                for (Reservation reservation : group) {
-                    if (reservation != null && seenReservationIds.add(reservation.getIdReservation())) {
-                        processingReservations.add(reservation);
-                    }
+            for (Reservation reservation : newReservations) {
+                if (reservation != null && seenReservationIds.add(reservation.getIdReservation())) {
+                    processingReservations.add(reservation);
                 }
             }
 
@@ -386,9 +444,10 @@ public class AssignationController {
                 .comparingInt(Reservation::getNbrPassager)
                 .reversed()
                 .thenComparingInt(Reservation::getIdReservation);
-            List<Reservation> sortedReservations = new ArrayList<>(processingReservations);
+            List<Reservation> sortedReservations = new ArrayList<>(newReservations);
             sortedReservations.sort(reservationComparator);
-            List<Reservation> priorityReservations = new ArrayList<>();
+            List<Reservation> priorityReservations = new ArrayList<>(carryOverReservations);
+            priorityReservations.sort(reservationComparator);
 
             List<Voiture> availableCars = new ArrayList<>(cars);
             availableCars.sort(Comparator
@@ -404,6 +463,9 @@ public class AssignationController {
                     if (readyAt != null) {
                         carNextAvailable.put(car.getId(), readyAt);
                     }
+                }
+                if (readyAt == null) {
+                    readyAt = groupStart;
                 }
                 if (isCarCandidateForGroup(readyAt, groupEnd)) {
                     candidateCarsForGroup.add(car);
@@ -493,7 +555,14 @@ public class AssignationController {
                         tripCounts.put(selectedCar.getId(), currentTrips + 1);
                     }
                 }
-                selectedCarReadyTimes.add(carNextAvailable.get(selectedCar.getId()));
+                LocalDateTime selectedReadyAt = carNextAvailable.get(selectedCar.getId());
+                if (selectedReadyAt == null) {
+                    selectedReadyAt = getCarAvailabilityTime(selectedCar, groupStart);
+                }
+                if (selectedReadyAt == null) {
+                    selectedReadyAt = groupStart;
+                }
+                selectedCarReadyTimes.add(selectedReadyAt);
                 availableCars.remove(selectedCarIndex);
             }
 
@@ -511,7 +580,7 @@ public class AssignationController {
             carryOverReservations = new ArrayList<>(unassignedReservations);
 
             results.add(new GroupAssignmentResult(
-                    groupIndex + 1,
+                    groupIndex,
                     reservationIds,
                     carriedOverReservationIds,
                     plans,
@@ -967,6 +1036,49 @@ public class AssignationController {
             }
         }
         return latest;
+    }
+
+    private LocalDateTime findEarliestArrival(List<Reservation> reservations) {
+        LocalDateTime earliest = null;
+        if (reservations == null) {
+            return null;
+        }
+        for (Reservation reservation : reservations) {
+            LocalDateTime date = reservation.getDateArriver();
+            if (date != null && (earliest == null || date.isBefore(earliest))) {
+                earliest = date;
+            }
+        }
+        return earliest;
+    }
+
+    private LocalDateTime findEarliestCarAvailabilityTime(
+            List<Voiture> cars,
+            Map<Integer, LocalDateTime> carNextAvailable,
+            LocalDateTime referenceTime
+    ) {
+        if (cars == null || cars.isEmpty() || referenceTime == null) {
+            return referenceTime;
+        }
+
+        LocalDateTime earliest = null;
+        for (Voiture car : cars) {
+            if (car == null) {
+                continue;
+            }
+            LocalDateTime availability = getCarAvailabilityTime(car, referenceTime);
+            LocalDateTime readyAt = carNextAvailable != null ? carNextAvailable.get(car.getId()) : null;
+            if (readyAt == null || (availability != null && availability.isAfter(readyAt))) {
+                readyAt = availability;
+            }
+            if (readyAt == null) {
+                readyAt = referenceTime;
+            }
+            if (earliest == null || readyAt.isBefore(earliest)) {
+                earliest = readyAt;
+            }
+        }
+        return earliest;
     }
 
     private List<Integer> extractUniqueHotels(List<Reservation> reservations) {
