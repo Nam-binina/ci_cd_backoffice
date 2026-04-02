@@ -15,20 +15,18 @@ INSERT INTO aeroport (nom) VALUES
 
 INSERT INTO hotel (nom, id_aeroport) VALUES
 ('Hotel 1', 1),
-('Hotel 2', 1),
-('Hotel 3', 1);
+('Hotel 2', 1);
+
 
 -- Distances hôtel <-> aéroport
 INSERT INTO hotel_aeroport_distance (id_hotel, id_aeroport, km) VALUES
-(1, 1, 20.00),
-(2, 1, 12.00),
-(3, 1, 18.00);
+(1, 1, 90.00),
+(2, 1, 65.00);
+
 
 -- Distances hôtel <-> hôtel (sens unique par paire)
 INSERT INTO hotel_hotel_distance (from_hotel_id, to_hotel_id, km) VALUES
-(1, 2, 20.00),
-(1, 3, 15.00),
-(2, 3, 19.00);
+(1, 2, 10.00);
 
 
 INSERT INTO consommation (description) VALUES
@@ -38,15 +36,15 @@ INSERT INTO consommation (description) VALUES
 -- Parc voitures : doublons de capacité pour tester Diesel + aléatoire
 -- + heure_disponibilite pour tester les fenêtres TA basées sur disponibilité
 INSERT INTO voiture (immatriculation, nombre_place, id_consommation, heure_disponibilite) VALUES
-('vehicule1',12, 1, '00:00:00'),
-('vehicule2', 7, 2, '08:35:00'),
-('vehicule3', 15, 2, '08:35:00'),
-('vehicule4', 12 , 2, '10:00:00');
+('vehicule1',10, 2, '00:00:00'),
+('vehicule2', 8, 2, '08:00:00'),
+('vehicule3', 8, 1, '08:00:00'),
+('vehicule4', 12 , 1, '09:00:00');
 
 
 -- Paramètres : vitesse pour heure retour, TA=30 min pour les groupes
 INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
-(30.0, 30);
+(60.0, 30);
 
 -- =============================================================
 -- Réservations du 19/03/2026
@@ -63,13 +61,10 @@ INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
 -- - Cas trajet multi-hôtels + calcul retour
 
 INSERT INTO reservation (date_arriver, nbr_passager, id_client, id_hotel, id_aeroport) VALUES
-('2026-04-01 10:20:00', 7,  'C007', 2, 1),
-('2026-04-01 08:00:00', 26,  'C001', 1, 1),
-('2026-04-01 08:15:00', 6,  'C002', 2, 1),
-('2026-04-01 09:45:00', 8, 'C003', 1, 1),
-('2026-04-01 09:20:00', 12,  'C004', 2, 1),
-('2026-04-01 14:00:00', 18, 'C005', 3, 1),
-('2026-04-01 16:20:00', 12,  'C006', 3, 1);
+('2026-04-01 06:00:00', 20,  'C001', 1, 1),
+('2026-04-01 08:15:00', 6,  'C002', 1, 1),
+('2026-04-01 09:00:00', 10, 'C003', 1, 1),
+('2026-04-01 09:10:00', 06,  'C004', 2, 1);
 
 -- ('2026-03-12 08:30:00', 7,  'C004', 4, 1),
 

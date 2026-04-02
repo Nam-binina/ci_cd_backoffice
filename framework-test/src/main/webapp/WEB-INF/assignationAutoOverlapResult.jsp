@@ -150,6 +150,10 @@
                                                 <%= plan.getVitesseMoyenne() != null ? String.format(java.util.Locale.US, "%.2f", plan.getVitesseMoyenne()) + " km/h" : "-" %>
                                             </div>
                                             <div>
+                                                <strong>Date de départ voiture:</strong>
+                                                <%= plan.getDateDepart() != null ? plan.getDateDepart().format(displayDateFormatter) : "-" %>
+                                            </div>
+                                            <div>
                                                 <strong>Date de retour aéroport:</strong>
                                                 <%= plan.getDateRetourAeroport() != null ? plan.getDateRetourAeroport().format(displayDateFormatter) : "-" %>
                                             </div>

@@ -626,10 +626,12 @@ public class AssignationController {
             plans = applyGroupDepartureToPlans(plans, groupDeparture);
 
             for (VehicleAssignmentPlan plan : plans) {
-                if (plan.getDateRetourAeroport() != null) {
-                    carNextAvailable.put(plan.getVoiture().getId(), plan.getDateRetourAeroport());
-                } else if (groupDeparture != null) {
-                    carNextAvailable.put(plan.getVoiture().getId(), groupDeparture);
+                LocalDateTime nextAvailable = plan.getDateRetourAeroport();
+                if (nextAvailable == null) {
+                    nextAvailable = plan.getDateDepart();
+                }
+                if (nextAvailable != null) {
+                    carNextAvailable.put(plan.getVoiture().getId(), nextAvailable);
                 }
             }
 
