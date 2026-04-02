@@ -69,6 +69,7 @@ public class AssignationController {
         private final int usedSeats;
         private final int remainingSeats;
         private final LocalDateTime dateDepart;
+        private final boolean fixedDeparture;
         private final String trajetOptimum;
         private final Double totalKmTrajet;
         private final Double vitesseMoyenne;
@@ -79,6 +80,7 @@ public class AssignationController {
                                      int usedSeats,
                                      int remainingSeats,
                                      LocalDateTime dateDepart,
+                                     boolean fixedDeparture,
                                      String trajetOptimum,
                                      Double totalKmTrajet,
                                      Double vitesseMoyenne,
@@ -88,6 +90,7 @@ public class AssignationController {
             this.usedSeats = usedSeats;
             this.remainingSeats = remainingSeats;
             this.dateDepart = dateDepart;
+            this.fixedDeparture = fixedDeparture;
             this.trajetOptimum = trajetOptimum;
             this.totalKmTrajet = totalKmTrajet;
             this.vitesseMoyenne = vitesseMoyenne;
@@ -112,6 +115,10 @@ public class AssignationController {
 
         public LocalDateTime getDateDepart() {
             return dateDepart;
+        }
+
+        public boolean isFixedDeparture() {
+            return fixedDeparture;
         }
 
         public String getTrajetOptimum() {
@@ -382,9 +389,14 @@ public class AssignationController {
                 break;
             }
 
-            LocalDateTime groupStart = findEarliestCarAvailabilityTime(cars, carNextAvailable, referenceTime);
-            if (groupStart == null) {
+            LocalDateTime groupStart;
+            if (carryOverReservations.isEmpty()) {
                 groupStart = referenceTime;
+            } else {
+                groupStart = findEarliestCarAvailabilityTime(cars, carNextAvailable, referenceTime);
+                if (groupStart == null) {
+                    groupStart = referenceTime;
+                }
             }
             LocalDateTime groupEnd = groupStart.plusMinutes(taMinutes);
 
@@ -476,6 +488,18 @@ public class AssignationController {
             List<VehicleAssignmentPlan> plans = new ArrayList<>();
             List<Reservation> unassignedReservations = new ArrayList<>();
             List<LocalDateTime> selectedCarReadyTimes = new ArrayList<>();
+            java.util.Set<Integer> newReservationIds = new java.util.LinkedHashSet<>();
+            java.util.Set<Integer> carryOverReservationIdsSet = new java.util.LinkedHashSet<>();
+            for (Reservation reservation : newReservations) {
+                if (reservation != null) {
+                    newReservationIds.add(reservation.getIdReservation());
+                }
+            }
+            for (Reservation reservation : carryOverReservations) {
+                if (reservation != null) {
+                    carryOverReservationIdsSet.add(reservation.getIdReservation());
+                }
+            }
 
             while (!priorityReservations.isEmpty() || !sortedReservations.isEmpty()) {
                 boolean headIsPriority = !priorityReservations.isEmpty();
@@ -539,13 +563,52 @@ public class AssignationController {
                 int usedSeats = countPassengers(selectedReservations);
                 int remainingSeats = selectedCar.getNombrePlace() - usedSeats;
 
+                LocalDateTime selectedReadyAt = carNextAvailable.get(selectedCar.getId());
+                if (selectedReadyAt == null) {
+                    selectedReadyAt = getCarAvailabilityTime(selectedCar, groupStart);
+                }
+                if (selectedReadyAt == null) {
+                    selectedReadyAt = groupStart;
+                }
+
+                boolean hasNewReservation = false;
+                boolean hasCarryOverReservation = false;
+                Reservation seatCompletingReservation = null;
+                int seatCounter = 0;
+                for (Reservation reservation : selectedReservations) {
+                    if (reservation == null) {
+                        continue;
+                    }
+                    if (newReservationIds.contains(reservation.getIdReservation())) {
+                        hasNewReservation = true;
+                    }
+                    if (carryOverReservationIdsSet.contains(reservation.getIdReservation())) {
+                        hasCarryOverReservation = true;
+                    }
+                    seatCounter += reservation.getNbrPassager();
+                    if (seatCompletingReservation == null && seatCounter >= selectedCar.getNombrePlace()) {
+                        seatCompletingReservation = reservation;
+                    }
+                }
+
+                LocalDateTime fixedDeparture = null;
+                if (seatCompletingReservation != null
+                        && newReservationIds.contains(seatCompletingReservation.getIdReservation())) {
+                    fixedDeparture = seatCompletingReservation.getDateArriver();
+                } else if (!hasNewReservation && remainingSeats == 0) {
+                    fixedDeparture = selectedReadyAt;
+                } else if (!hasNewReservation && hasCarryOverReservation && remainingSeats > 0) {
+                    fixedDeparture = selectedReadyAt;
+                }
+
                 VehicleAssignmentPlan selectedPlan = buildVehiclePlan(
                         distanceRepository,
                         selectedCar,
                         selectedReservations,
                         usedSeats,
                         remainingSeats,
-                        vitesseMoyenne
+                        vitesseMoyenne,
+                        fixedDeparture
                 );
 
                 plans.add(selectedPlan);
@@ -554,13 +617,6 @@ public class AssignationController {
                     if (tripCounts != null) {
                         tripCounts.put(selectedCar.getId(), currentTrips + 1);
                     }
-                }
-                LocalDateTime selectedReadyAt = carNextAvailable.get(selectedCar.getId());
-                if (selectedReadyAt == null) {
-                    selectedReadyAt = getCarAvailabilityTime(selectedCar, groupStart);
-                }
-                if (selectedReadyAt == null) {
-                    selectedReadyAt = groupStart;
                 }
                 selectedCarReadyTimes.add(selectedReadyAt);
                 availableCars.remove(selectedCarIndex);
@@ -704,9 +760,11 @@ public class AssignationController {
             List<Reservation> assignedReservations,
             int usedSeats,
             int remainingSeats,
-            double vitesseMoyenne
+            double vitesseMoyenne,
+            LocalDateTime fixedDeparture
     ) {
-        LocalDateTime dateDepart = findLatestArrival(assignedReservations);
+        LocalDateTime dateDepart = fixedDeparture != null ? fixedDeparture : findLatestArrival(assignedReservations);
+        boolean fixedDepartureFlag = fixedDeparture != null;
         double effectiveSpeed = vitesseMoyenne > 0 ? vitesseMoyenne : 0.0;
 
         if (assignedReservations == null || assignedReservations.isEmpty()) {
@@ -716,6 +774,7 @@ public class AssignationController {
                     usedSeats,
                     remainingSeats,
                     dateDepart,
+            fixedDepartureFlag,
                     "Trajet indisponible",
                     null,
                     effectiveSpeed,
@@ -735,6 +794,7 @@ public class AssignationController {
                     usedSeats,
                     remainingSeats,
                     dateDepart,
+            fixedDepartureFlag,
                     "Trajet indisponible: " + message,
                     null,
                     effectiveSpeed,
@@ -763,6 +823,7 @@ public class AssignationController {
                 usedSeats,
                 remainingSeats,
                 dateDepart,
+        fixedDepartureFlag,
                 trajet.toString(),
                 totalKm,
                 effectiveSpeed,
@@ -772,12 +833,20 @@ public class AssignationController {
 
     private LocalDateTime findGroupDepartureFromPlans(List<VehicleAssignmentPlan> plans, List<LocalDateTime> selectedCarReadyTimes) {
         LocalDateTime latestAssignedArrival = null;
+        LocalDateTime latestFixedDeparture = null;
         if (plans == null) {
             return null;
         }
 
         for (VehicleAssignmentPlan plan : plans) {
             if (plan == null || plan.getReservations() == null) {
+                continue;
+            }
+            if (plan.isFixedDeparture()) {
+                LocalDateTime planDeparture = plan.getDateDepart();
+                if (planDeparture != null && (latestFixedDeparture == null || planDeparture.isAfter(latestFixedDeparture))) {
+                    latestFixedDeparture = planDeparture;
+                }
                 continue;
             }
             LocalDateTime latestPlanArrival = findLatestArrival(plan.getReservations());
@@ -795,13 +864,22 @@ public class AssignationController {
             }
         }
 
+        LocalDateTime groupDeparture = null;
         if (latestAssignedArrival == null) {
-            return latestSelectedCarReady;
+            groupDeparture = latestSelectedCarReady;
+        } else if (latestSelectedCarReady == null) {
+            groupDeparture = latestAssignedArrival;
+        } else {
+            groupDeparture = latestAssignedArrival.isAfter(latestSelectedCarReady) ? latestAssignedArrival : latestSelectedCarReady;
         }
-        if (latestSelectedCarReady == null) {
-            return latestAssignedArrival;
+
+        if (groupDeparture == null) {
+            return latestFixedDeparture;
         }
-        return latestAssignedArrival.isAfter(latestSelectedCarReady) ? latestAssignedArrival : latestSelectedCarReady;
+        if (latestFixedDeparture == null) {
+            return groupDeparture;
+        }
+        return latestFixedDeparture.isAfter(groupDeparture) ? latestFixedDeparture : groupDeparture;
     }
 
     private List<VehicleAssignmentPlan> applyGroupDepartureToPlans(List<VehicleAssignmentPlan> plans, LocalDateTime groupDeparture) {
@@ -815,10 +893,11 @@ public class AssignationController {
                 continue;
             }
 
+            LocalDateTime departureToUse = plan.isFixedDeparture() ? plan.getDateDepart() : groupDeparture;
             LocalDateTime dateRetour = null;
-            if (groupDeparture != null && plan.getTotalKmTrajet() != null && plan.getVitesseMoyenne() != null && plan.getVitesseMoyenne() > 0.0) {
+            if (departureToUse != null && plan.getTotalKmTrajet() != null && plan.getVitesseMoyenne() != null && plan.getVitesseMoyenne() > 0.0) {
                 long minutes = Math.round((plan.getTotalKmTrajet() / plan.getVitesseMoyenne()) * 60.0);
-                dateRetour = groupDeparture.plusMinutes(minutes);
+                dateRetour = departureToUse.plusMinutes(minutes);
             }
 
             normalizedPlans.add(new VehicleAssignmentPlan(
@@ -826,7 +905,8 @@ public class AssignationController {
                     plan.getReservations(),
                     plan.getUsedSeats(),
                     plan.getRemainingSeats(),
-                    groupDeparture,
+                    departureToUse,
+                    plan.isFixedDeparture(),
                     plan.getTrajetOptimum(),
                     plan.getTotalKmTrajet(),
                     plan.getVitesseMoyenne(),
@@ -1207,7 +1287,8 @@ public class AssignationController {
                 reservationsToAssign,
                 usedSeats,
                 remainingSeats,
-                vitesseMoyenne
+        vitesseMoyenne,
+        null
         );
 
         LocalDate debutTrajet = toLocalDate(plan.getDateDepart());
