@@ -63,7 +63,7 @@ INSERT INTO parametre (vitesse_moyenne, temps_attente) VALUES
 -- - Cas trajet multi-hôtels + calcul retour
 
 INSERT INTO reservation (date_arriver, nbr_passager, id_client, id_hotel, id_aeroport) VALUES
--- Groupe 1
+('2026-04-01 10:20:00', 7,  'C007', 2, 1),
 ('2026-04-01 08:00:00', 26,  'C001', 1, 1),
 ('2026-04-01 08:15:00', 6,  'C002', 2, 1),
 ('2026-04-01 09:45:00', 8, 'C003', 1, 1),
